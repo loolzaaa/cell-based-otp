@@ -139,7 +139,7 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 - Интерфейс `RateLimiter` рядом с `ThrottleStore` (NIST требует ограничение по нескольким осям).
 - DoD: интерфейс + in-memory реализация + тесты.
 
-### [P2-G] Распределённые хранилища состояния — ✅ **сделано (JDBC проверено; Redis — [ИНФРА])**
+### [P2-G] Распределённые хранилища состояния — ✅ **сделано (JDBC + Redis проверены)**
 - [x] `cotp-jdbc`: `JdbcBurnStore`/`JdbcThrottleStore` поверх `DataSource`, DDL `JdbcStores`
       (`createSchema`); атомарность на PK/unique-констрейнтах и `UPDATE ... failures+1`.
       **Проверено на H2** (11 тестов, включая конкурентный инкремент и `evictExpired`).
@@ -148,7 +148,9 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 - [x] `cotp-store-contract`: переиспользуемые JUnit5 контракты `BurnStore`/`ThrottleStore`
       (используются JDBC и Redis).
 - DoD: модули с внешней зависимостью собраны; conformance-контракт есть.
-- **[ИНФРА]** Прогон Redis-контракта на живом сервере (`COTP_REDIS_URI`) — 9 тестов сейчас skipped.
+- [x] Redis-контракт прогнан на **живом Redis** (Docker `redis:7-alpine`, `COTP_REDIS_URI`) — **9/9**;
+      JDBC-контракт на H2 — **11/11**. (Попутно исправлен общий контракт: фиксированный `expiresAt`
+      заменён на далёкое будущее, иначе TTL-нативные хранилища истекали mid-assertion.)
 
 ### [P2-H] KMS-адаптер `SecretCipher` — **[СУБАГЕНТ] + [ИНФРА]**
 - `SecretCipher` поверх AWS KMS / Azure Key Vault / Vault; поддержка key-id и ротации.
@@ -189,7 +191,9 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 - [x] JPMS `module-info.java` (`module com.cotp { exports com.cotp; }`).
 - [x] JaCoCo coverage + Maven Enforcer (`requireJavaVersion [17,)`); локально `mvnw verify` — **BUILD SUCCESS**, 40 тестов.
 - [ ] **Статический анализ** (ErrorProne/SpotBugs) в сборке/CI — **не добавлен**.
-- [ ] Проверен ли CI на GitHub (локально SUCCESS; JDK 17 в среде отсутствует).
+- [x] CI на GitHub прогнан: **JDK 21 — зелёный**; **JDK 17** выявил падение (`ProviderException`
+      в AES-GCM на усечённом шифртексте) — **исправлено** (guard длины + `catch RuntimeException`),
+      локально ядро перепроверено (175/40).
 
 ### [Q-B] Расширенное тестирование — **[СУБАГЕНТ]**
 - Property-based/fuzz (jqwik): `Base32.decode`, `Cell.parse`, деривация, границы словаря.
@@ -250,6 +254,8 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 - [x] `cotp-pdf`: `CotpCardPdf` (PDFBox) — печатная карта (сетка SINGLE/TOP-BOTTOM, заголовки
       A–E/1–5, `cardId`, версия/даты, инструкция, **QR с `cardId`**, без PII/секрета); опции `CotpPdfOptions`.
       **Проверено** (5 тестов, `%PDF-`, 1 страница, текст-извлечение содержит слово/`cardId`).
+- [x] `cotp-pdf/render-sample.ps1` + `SampleCardPdf` — генерация `cotp-pdf/build/sample-card.pdf`
+      (SINGLE/WORD_PAIRS; проверено: `%PDF-`, 1 страница, openable).
 - [ ] Apple Wallet-версия пасса — не реализована (опционально).
 
 ### [U-D] Локализация словаря (RTL/CJK) — **[СУБАГЕНТ]**

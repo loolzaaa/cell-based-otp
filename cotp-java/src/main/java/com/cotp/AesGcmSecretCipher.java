@@ -20,6 +20,7 @@ public final class AesGcmSecretCipher implements SecretCipher {
 
     private static final int IV_BYTES = 12;
     private static final int TAG_BITS = 128;
+    private static final int TAG_BYTES = TAG_BITS / 8;
 
     private final byte[] key;
     private final SecureRandom random = new SecureRandom();
@@ -69,7 +70,10 @@ public final class AesGcmSecretCipher implements SecretCipher {
 
     @Override
     public byte[] decrypt(byte[] ciphertext) {
-        if (ciphertext == null || ciphertext.length <= IV_BYTES) {
+        // A valid value is IV (12 bytes) || ciphertext || tag (16 bytes); reject anything shorter
+        // deterministically (some JDK providers throw ProviderException/ShortBufferException for a
+        // truncated input instead of a checked GeneralSecurityException).
+        if (ciphertext == null || ciphertext.length < IV_BYTES + TAG_BYTES) {
             throw new CotpCryptoException("Invalid AES-GCM ciphertext");
         }
         try {
@@ -78,7 +82,7 @@ public final class AesGcmSecretCipher implements SecretCipher {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(TAG_BITS, iv));
             return cipher.doFinal(sealed);
-        } catch (GeneralSecurityException e) {
+        } catch (GeneralSecurityException | RuntimeException e) {
             throw new CotpCryptoException("AES-GCM decryption failed (wrong key or tampered ciphertext)", e);
         }
     }

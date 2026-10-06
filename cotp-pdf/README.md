@@ -48,6 +48,38 @@ CotpPdfOptions options = CotpPdfOptions.builder()
 byte[] bytes = new CotpCardPdf(options).render(card);
 ```
 
+## Generate a sample PDF
+
+`SampleCardPdf` renders a **deterministic** card (fixed 32-byte secret, fixed card id and fixed
+validity dates) to a real PDF file, so the grid is reproducible. The easiest way is the helper
+script, which installs the core if needed, builds this module, resolves the classpath and runs the
+main class:
+
+```powershell
+# default: single-word layout -> cotp-pdf\build\sample-card.pdf
+powershell -ExecutionPolicy Bypass -File cotp-pdf\render-sample.ps1
+
+# the TOP/BOTTOM (Avatier) word-pair layout
+powershell -ExecutionPolicy Bypass -File cotp-pdf\render-sample.ps1 -Layout WORD_PAIRS
+
+# custom card id / output path / optional PIN note printed as the title
+powershell -ExecutionPolicy Bypass -File cotp-pdf\render-sample.ps1 -CardId CARD-42 -Output .\card.pdf
+powershell -ExecutionPolicy Bypass -File cotp-pdf\render-sample.ps1 -PinNote "Read the word, then your PIN"
+```
+
+The script prints the absolute path, byte size, page count and `%PDF-` header. Open the produced
+file with any PDF reader (double-click, or `Start-Process .\cotp-pdf\build\sample-card.pdf`).
+
+Run the main class directly after `dependency:build-classpath`:
+
+```powershell
+java -cp "cotp-pdf\target\classes;<deps>" com.cotp.pdf.SampleCardPdf `
+    cotp-pdf\build\sample-card.pdf WORD_PAIRS COTP-DEMO-0001
+```
+
+Arguments are positional and optional: `[outputPath] [SINGLE|WORD_PAIRS] [cardId] [pinNote]`.
+The PIN note is printed as the card title only for visual testing — never pass the real PIN.
+
 ## Public API
 
 ```java

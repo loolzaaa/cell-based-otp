@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cotp.BurnStore;
+import java.time.Duration;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,13 @@ public abstract class AbstractBurnStoreContract {
     protected abstract BurnStore newStore();
 
     private static final Instant T0 = Instant.parse("2026-10-06T12:00:00Z");
+
+    /**
+     * Challenge expiry that is far in the future relative to the test's wall clock, so TTL-native
+     * stores (Redis) do not expire the key mid-assertion. Fixed timestamps would otherwise be in the
+     * past depending on when the test runs.
+     */
+    private static final Instant FAR_FUTURE = Instant.now().plus(Duration.ofDays(1));
 
     @Test
     void cellBurnIsOneTimeAndAtomic() {
@@ -48,9 +56,9 @@ public abstract class AbstractBurnStoreContract {
     void challengeIsOneTime() {
         BurnStore store = newStore();
         assertFalse(store.isChallengeUsed("ch1"));
-        assertTrue(store.markChallengeUsed("card", "ch1", T0.plusSeconds(120)));
+        assertTrue(store.markChallengeUsed("card", "ch1", FAR_FUTURE));
         assertTrue(store.isChallengeUsed("ch1"));
-        assertFalse(store.markChallengeUsed("card", "ch1", T0.plusSeconds(120)));
+        assertFalse(store.markChallengeUsed("card", "ch1", FAR_FUTURE));
     }
 
     @Test
@@ -69,7 +77,7 @@ public abstract class AbstractBurnStoreContract {
         BurnStore store = newStore();
         store.markCellBurned("card", "C2");
         store.recordCellUse("card", "C2", T0);
-        store.markChallengeUsed("card", "ch1", T0.plusSeconds(120));
+        store.markChallengeUsed("card", "ch1", FAR_FUTURE);
         store.reset("card");
         assertFalse(store.isCellBurned("card", "C2"));
         assertNull(store.lastCellUse("card", "C2"));
@@ -80,7 +88,7 @@ public abstract class AbstractBurnStoreContract {
     @Test
     void resetDoesNotAffectOtherCard() {
         BurnStore store = newStore();
-        Instant exp = T0.plusSeconds(120);
+        Instant exp = FAR_FUTURE;
         store.markCellBurned("a", "C2");
         store.markCellBurned("b", "C2");
         store.markChallengeUsed("a", "chA", exp);
