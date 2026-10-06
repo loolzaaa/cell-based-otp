@@ -312,7 +312,8 @@ enroll ─► print ─► issue ─┬─► challenge/verify ─┬─► OK (
 - Ячейка `TIME_BASED` принимается, только если совпадает с детерминированным выбором для любого шага
   в окне `[nowStep − timeWindowBack, nowStep + timeWindowForward]` (§11.2).
 - При ошибках — проверить NTP; расширять окно осторожно (снижает защиту).
-- TTL `TIME_BASED` автоматически ограничен `min(challengeTtl, timeWindowBack · timeStepSeconds)`.
+- TTL `TIME_BASED` автоматически ограничен остатком окна
+  `min(challengeTtl, (issueStep + timeWindowBack + 1)·step − now)`.
 
 ---
 
@@ -320,10 +321,9 @@ enroll ─► print ─► issue ─┬─► challenge/verify ─┬─► OK (
 
 ### 10.1. Аудит-события (**[ПЛАН]** P1-A)
 
-`CotpEventSink` (no-op по умолчанию) должен эмитить: `CHALLENGE_ISSUED`, `VERIFY_OK`,
-`VERIFY_FAIL(result)`, `CELL_BURNED`, `CELL_COOLDOWN`, `LOCKOUT`, `CHALLENGE_REUSED_ATTEMPT`,
-`CARD_EXHAUSTED`, `CARD_EXPIRED`, `IDENTITY_MISMATCH`, `SECRET_DECRYPT_FAILURE`.
-**Требование:** события без секретов/PII.
+`CotpEventSink` (no-op по умолчанию) эмитит события (`CotpEventType`): `CHALLENGE_ISSUED`,
+`VERIFY_SUCCEEDED`, `VERIFY_FAILED`, `CHALLENGE_REUSED_ATTEMPT`, `CARD_EXHAUSTED`, `CELL_BURNED`,
+`CELL_COOLDOWN_RECORDED`, `THROTTLE_LOCKOUT`. **Требование:** события без секретов/PII.
 
 ### 10.2. Метрики Prometheus (**[ПЛАН]** P1-B, модуль `cotp-metrics`)
 
@@ -394,7 +394,7 @@ increase(cotp_challenge_issued_total[10m]) > 200              # попытка �
 |---|---|---|
 | Тайм-степ/окно времени | `CotpScheme` | Карта и верификатор берут из `card.scheme()` |
 | TTL/burn/cooldown/throttle/PIN | `CotpPolicy` | Операционные, не влияют на вывод сетки |
-| TTL `TIME_BASED` | Вычисляется | `min(challengeTtl, timeWindowBack · timeStepSeconds)` |
+| TTL `TIME_BASED` | Остаток окна | `min(challengeTtl, (issueStep + timeWindowBack + 1)·step − now)` |
 | PIN-хэш | `PinHasher` (через `CotpPolicy.pinIterations`) | Формат `pbkdf2-sha256$iters$salt$hash` |
 | Секрет/бэкап | `CotpSecret` | Base32; `destroy()` — zeroization |
 | Шифрование at-rest | `SecretCipher`/`AesGcmSecretCipher` | KMS-адаптер **[ПЛАН]** (P2-H) |

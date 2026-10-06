@@ -526,8 +526,9 @@ public final class CotpSelfTest {
         CotpCard capCard = new CotpCardGenerator(smallWindow).generate("CAP", CotpSecret.of(secret));
         Cotp capGen = new Cotp(CotpPolicy.builder().challengeMode(ChallengeMode.TIME_BASED).build());
         CotpChallenge capped = capGen.challengeGenerator().timeBased(capCard, now);
+        // coverage = (timeWindowBack + 1) * step = (1 + 1) * 30 = 60 s, capped by policy TTL (120 s)
         check("TIME_BASED ttl capped to card window coverage",
-                !capped.expiresAt().isAfter(now.plusSeconds(30)));
+                !capped.expiresAt().isAfter(now.plusSeconds(60)));
 
         java.util.List<String> nbsp = new java.util.ArrayList<>(base);
         nbsp.set(0, "a\u00A0b");
@@ -600,7 +601,11 @@ public final class CotpSelfTest {
         InMemoryThrottleStore ts = new InMemoryThrottleStore();
         ts.incrementFailure("TH");
         check("throttle failure recorded", ts.failureCount("TH") == 1);
-        ts.purge(t0.plusSeconds(10), java.time.Duration.ofHours(1));
+        // C1 regression: a recently-active failure counter must NOT be evicted as idle.
+        ts.purge(Instant.now(), java.time.Duration.ofHours(1));
+        check("recent throttle state not evicted", ts.failureCount("TH") == 1);
+        // Idle state (no access within the window) IS evicted.
+        ts.purge(Instant.now().plusSeconds(2 * 3600), java.time.Duration.ofHours(1));
         check("idle throttle state evicted", ts.failureCount("TH") == 0);
 
         // --- SecretCipher (AES-GCM) ---
@@ -854,6 +859,15 @@ public final class CotpSelfTest {
 
         eq("time-based verify OK", VerificationResult.OK,
                 cotp.verifier().verify(card, null, a, card.wordAt(a.cell()), null, now));
+
+        // C4 regression: timeWindowBack=0 must still yield a usable (non-immediately-expired) TTL.
+        CotpScheme zeroBack = CotpScheme.builder().timeWindowBack(0).build();
+        Cotp zero = new Cotp(zeroBack, CotpPolicy.builder().challengeMode(ChallengeMode.TIME_BASED).build());
+        CotpCard zc = zero.generateCard("ZERO-BACK");
+        CotpChallenge zch = zero.challengeGenerator().timeBased(zc, now);
+        check("timeWindowBack=0 challenge not expired", zch.expiresAt().isAfter(now));
+        eq("timeWindowBack=0 verify OK", VerificationResult.OK,
+                zero.verifier().verify(zc, null, zch, zc.wordAt(zch.cell()), null, now));
     }
 
     private static void distributionSanity() {

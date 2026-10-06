@@ -75,7 +75,7 @@ Without Maven at all, use the bundled script (this is how the repo is verified h
 ```
 
 It compiles `src/main/java` + `tools/`, copies resources and runs the dependency-free
-`com.cotp.CotpSelfTest` (175 assertions, including the full reference vector).
+`com.cotp.CotpSelfTest` (178 assertions, including the full reference vector).
 
 ## Layout
 

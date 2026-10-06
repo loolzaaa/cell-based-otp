@@ -137,15 +137,20 @@ public final class CotpChallengeGenerator {
         Objects.requireNonNull(card, "card");
         Objects.requireNonNull(now, "now");
         CotpScheme scheme = card.scheme();
-        long timeStep = Math.floorDiv(now.getEpochSecond(), scheme.timeStepSeconds()) + stepOffset;
+        long stepSeconds = scheme.timeStepSeconds();
+        long timeStep = Math.floorDiv(now.getEpochSecond(), stepSeconds) + stepOffset;
         byte[] challengeKey = CotpDerivation.challengeKey(card.secret().copyBytes(), card.cardId(), scheme);
         List<Cell> cells = scheme.cells();
         int index = CotpDerivation.selectSlotIndex(challengeKey, timeStep, cells.size(), scheme);
-        // The challenge lifetime for TIME_BASED is bounded by the card's drift-window coverage, so a
-        // policy TTL larger than the scheme window can never produce an "unexpired but unverifiable"
-        // challenge (cross-configuration safety).
-        long coverageMillis = (long) scheme.timeWindowBack() * scheme.timeStepSeconds() * 1000L;
-        Duration ttl = Duration.ofMillis(Math.min(policy.challengeTtl().toMillis(), coverageMillis));
+        // The challenge is verifiable while the verifier's current step stays within
+        // [issueStep - timeWindowForward, issueStep + timeWindowBack]; i.e. until the exclusive
+        // boundary (issueStep + timeWindowBack + 1) * step. Bound the TTL by that remaining time so
+        // a challenge never becomes "unexpired but unverifiable", and a scheme with
+        // timeWindowBack=0 still yields a positive, usable TTL for the current step.
+        long endBoundarySeconds = (timeStep + scheme.timeWindowBack() + 1L) * stepSeconds;
+        long remainingMillis = Math.max(1L,
+                Duration.between(now, Instant.ofEpochSecond(endBoundarySeconds)).toMillis());
+        Duration ttl = Duration.ofMillis(Math.min(policy.challengeTtl().toMillis(), remainingMillis));
         return newChallenge(card.cardId(), cells.get(index), ChallengeMode.TIME_BASED, now, ttl, context);
     }
 

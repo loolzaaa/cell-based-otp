@@ -32,6 +32,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before the tag check); also wraps unexpected provider `RuntimeException`s.
 - Store contract tests use a far-future challenge expiry so TTL-native stores (Redis) do not expire
   the key mid-assertion.
+- `InMemoryThrottleStore.incrementFailure` now updates the last-access time so failure counters are
+  no longer evicted as "idle" by `evictIdle`/`purge` — this previously allowed the lockout to be
+  bypassed by ambient traffic in the default in-memory configuration.
+- `cotp-redis` keys URL-encode their dynamic components, so identifiers containing `:` (e.g. a
+  `cardId` of `"A:B"`) can no longer collide with unrelated keys.
+- TIME_BASED challenge TTL includes the current time step, so `timeWindowBack=0` no longer yields a
+  zero-length (immediately expired) challenge.
+- `cotp-demo` no longer returns the stored PIN hash over the API/UI.
+- `BurnStore` Javadoc clarifies that `recordCellUse` (COOLDOWN) is a best-effort timestamp write,
+  while `markCellBurned`/`markChallengeUsed` are the atomic one-time check-and-set operations.
+- `cotp-redis` now wraps driver exceptions in `CotpException` uniformly (previously some methods
+  leaked raw `RedisCommandExecutionException`).
+- `cotp-jdbc` eviction is gated so it is not issued on every verification; added unconditional
+  `JdbcBurnStore.purge(now)` / `JdbcThrottleStore.purge(now, idleTtl)` for scheduled sweeps and an
+  index on `cotp_throttle(last_access)`.
+- `cotp-redis`: the per-card challenge index is now a ZSET scored by expiry, trimmed on write and
+  TTL'd, so it can no longer grow without bound.
+- Core: TIME_BASED challenge TTL equals the remaining drift-window validity (no more
+  "unexpired but unverifiable" gap; `timeWindowBack=0` yields a positive TTL).
+- `cotp-jdbc`: constraint-violation detection also inspects `SQLException.getNextException()`.
+- `cotp-pdf`: non-WinAnsi/unprintable text is sanitised and rendering failures are wrapped as
+  `CotpPdfException` (arbitrary card ids / titles no longer break rendering).
+- Core: `SchemeRegistry.resolve/contains` are null-safe; `CotpScheme` bounds the time windows
+  (guards against integer overflow / pathological values).
+- `cotp-redis`: the challenge-index TTL is only ever extended (never shrunk by a later, shorter-TTL
+  challenge), so `reset` can always reach live challenge keys; `create()`/`close()` failures are
+  wrapped as `CotpException`.
+- Core: TIME_BASED TTL is computed with sub-second precision, so a fractionally-issued challenge is
+  not "unexpired but unverifiable".
 
 ## [1.0.0] - 2026-10-06
 

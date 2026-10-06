@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
 
 /**
@@ -35,7 +36,11 @@ public final class JdbcThrottleStore implements ThrottleStore {
             "DELETE FROM cotp_throttle WHERE (locked_until IS NULL OR locked_until <= ?)"
                     + " AND (last_access IS NULL OR last_access <= ?)";
 
+    /** Gate for the best-effort {@link #evictIdle(Instant, Duration)} sweep on the hot path. */
+    private static final int EVICT_GATE = 1024;
+
     private final DataSource dataSource;
+    private final AtomicLong evictCounter = new AtomicLong();
 
     public JdbcThrottleStore(DataSource dataSource) {
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource");
@@ -160,6 +165,19 @@ public final class JdbcThrottleStore implements ThrottleStore {
 
     @Override
     public void evictIdle(Instant now, Duration idleTtl) {
+        // Best-effort: avoid a DELETE on every verification; call purge(now, idleTtl) for an
+        // unconditional sweep (e.g. from a scheduled task).
+        if (now == null || idleTtl == null || (evictCounter.incrementAndGet() & (EVICT_GATE - 1)) != 0) {
+            return;
+        }
+        purge(now, idleTtl);
+    }
+
+    /**
+     * Unconditionally removes idle throttle rows (not locked and not accessed within {@code idleTtl}).
+     * Safe to call from a scheduled task.
+     */
+    public void purge(Instant now, Duration idleTtl) {
         if (now == null || idleTtl == null) {
             return;
         }

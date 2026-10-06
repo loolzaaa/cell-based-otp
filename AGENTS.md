@@ -28,10 +28,10 @@
 
 ```powershell
 # Быстро, без Maven (JDK 17+ на PATH):
-powershell -ExecutionPolicy Bypass -File cotp-java\run-verify.ps1   # ожидаем PASS=175 FAIL=0
+powershell -ExecutionPolicy Bypass -File cotp-java\run-verify.ps1   # ожидаем PASS=178 FAIL=0
 
 # Полная сборка через Maven Wrapper:
-cotp-java\mvnw.cmd -B -f cotp-java\pom.xml verify                    # BUILD SUCCESS, 40 тестов
+cotp-java\mvnw.cmd -B -f cotp-java\pom.xml verify                    # BUILD SUCCESS, 43 теста
 ```
 
 JUnit без Maven: запустите `mvnw` (полная сборка с тестами) или self-test через

@@ -16,11 +16,15 @@ import java.util.Set;
  *       policies.</li>
  * </ul>
  *
- * <p>Implementations MUST guarantee that the {@code mark*}/{@code record*} operations are atomic
- * (check-and-set) so that two concurrent verifications of the same cell/challenge cannot both
- * succeed. The bundled {@link InMemoryBurnStore} is intended for single-node deployments and tests;
- * production deployments should provide a distributed implementation (for example over Redis or the
- * application database) with the same contract — using native TTL for the challenge entries.</p>
+ * <p>Implementations MUST guarantee that {@link #markCellBurned(String, String)} and
+ * {@link #markChallengeUsed(String, String, Instant)} are atomic check-and-set, so that two
+ * concurrent verifications of the same cell/challenge cannot both succeed. {@link #recordCellUse}
+ * is a plain (last-write) timestamp used for the best-effort {@link BurnPolicy#COOLDOWN} window and
+ * is NOT a hard one-time guarantee; under COOLDOWN the one-time property is still provided by the
+ * atomic challenge mark. The bundled {@link InMemoryBurnStore} is intended for single-node
+ * deployments and tests; production deployments should provide a distributed implementation (for
+ * example over Redis or the application database) with the same contract — using native TTL for the
+ * challenge entries.</p>
  */
 public interface BurnStore {
 

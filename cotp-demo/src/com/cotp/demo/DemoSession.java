@@ -212,7 +212,8 @@ final class DemoSession {
         }
 
         m.put("cardId", card.cardId());
-        m.put("pinHash", pinHash);
+        // Do not expose the stored credential-equivalent hash over the API; show only that it exists.
+        m.put("pinHash", pinHash == null ? null : "pbkdf2-sha256$… (redacted)");
         m.put("scheme", Map.of(
                 "version", scheme.version(),
                 "layout", layout,

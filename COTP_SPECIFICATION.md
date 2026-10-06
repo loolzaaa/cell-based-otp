@@ -397,7 +397,7 @@ function build_grid(K_grid, config):
 - смена одного бита секрета меняет сетку; смена `card_id` при том же секрете меняет сетку;
 - HKDF сверен с официальным тест-вектором RFC 5869 Test Case 1.
 
-Итог прогона: `PASS=175 FAIL=0` (standalone harness), `40 tests successful` (JUnit 5).
+Итог прогона: `PASS=178 FAIL=0` (standalone harness), `43 tests successful` (JUnit 5).
 
 ---
 
@@ -443,10 +443,11 @@ cell  = cells[index]
 >   ячейка будет отвергнута при повторном использовании). Если пользователь выбрал `TIME_BASED`
 >   и не задал политику явно, по умолчанию применяется `BurnPolicy.CHALLENGE`; явная комбинация
 >   `TIME_BASED + CELL/COOLDOWN` отвергается при сборке `CotpPolicy`;
-> - срок жизни челленджа ограничивается сверху покрытием окна карты
->   (`min(challengeTtl, timeWindowBack · timeStepSeconds)`), поэтому «живой, но непроверяемый»
->   челлендж не возникает даже при расхождении политики и схемы карты. Значения по умолчанию:
->   `timeStep=30`, `timeWindowBack=4`, `timeWindowForward=1`, `challengeTtl=120` (4·30 = 120).
+> - срок жизни челленджа ограничивается сверху **остатком окна валидности**:
+>   `ttl = min(challengeTtl, (issueStep + timeWindowBack + 1)·step − now)`, поэтому «живой, но
+>   непроверяемый» челлендж не возникает, а при `timeWindowBack=0` TTL всё равно положителен
+>   (текущий шаг). Значения по умолчанию: `timeStep=30`, `timeWindowBack=4`, `timeWindowForward=1`,
+>   `challengeTtl=120`.
 
 ### 10.3. TTL и идентификатор
 
@@ -541,8 +542,10 @@ verify(card, pinHash, challenge, word, pin, presentedId, registeredId, now):
 ### 11.5. Constant-time и гонки
 
 - Слово и PIN сравниваются constant-time (`ConstantTime`).
-- `BurnStore.markCellBurned`/`markChallengeUsed`/`recordCellUse` — атомарные check-and-set: параллельные запросы
-  не могут оба получить `OK`.
+- `BurnStore.markCellBurned`/`markChallengeUsed` — атомарные check-and-set: параллельные запросы не
+  могут оба получить `OK`. `recordCellUse` (окно `COOLDOWN`) — обычная (last-write) запись метки
+  времени и **не** является жёстким one-time: под `COOLDOWN` one-time обеспечивает атомарная пометка
+  челленджа.
 - Рекомендация: в кластере — распределённое хранилище (Redis/БД) с транзакционным `SETNX`.
 
 ### 11.6. Результаты верификации
@@ -695,7 +698,7 @@ powershell -ExecutionPolicy Bypass -File cotp-java\run-verify.ps1
 java -cp cotp-java\build\classes com.cotp.CotpVectorPrinter
 ```
 
-Ожидаемый результат self-test: `PASS=175 FAIL=0`.
+Ожидаемый результат self-test: `PASS=178 FAIL=0`.
 
 ---
 
@@ -1032,10 +1035,10 @@ Cotp cotp = new Cotp(scheme, policy);
 
 ```
 cotp-java\mvnw.cmd -B -f cotp-java\pom.xml verify   # JUnit 5 (Maven Wrapper)
-powershell -File cotp-java\run-verify.ps1            # без Maven: PASS=175 FAIL=0
+powershell -File cotp-java\run-verify.ps1            # без Maven: PASS=178 FAIL=0
 ```
 
-Проверено в среде сбора: **standalone 175/175**, **JUnit 40/40**.
+Проверено в среде сбора: **standalone 178/178**, **JUnit 43/43**.
 
 ### 19.5. Резервный цифровой фактор (опционально)
 
@@ -1171,7 +1174,7 @@ function build_grid(K_grid, layout, dict):
 | Утверждение | Статус | Источник |
 |---|---|---|
 | HMAC-SHA-256, HKDF, PBKDF2, Base32, CSPRNG | **[СТАНДАРТ]** | RFC 2104/5869/8018/4648, FIPS |
-| Детерминированность сетки из секрета | **[АЛГОРИТМ+ПРОВЕРЕНО]** | §9, self-test 175/175 |
+| Детерминированность сетки из секрета | **[АЛГОРИТМ+ПРОВЕРЕНО]** | §9, self-test 178/178 |
 | `K_grid` референсного вектора | **[ПРОВЕРЕНО]** | §14.2 |
 | Отсутствие модульного смещения при power-of-two словаре | **[АЛГОРИТМ+ПРОВЕРЕНО]** | §7.3, тест равномерности |
 | HKDF Test Case 1 | **[ПРОВЕРЕНО]** | RFC 5869, self-test |

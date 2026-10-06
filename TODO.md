@@ -142,14 +142,14 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 ### [P2-G] Распределённые хранилища состояния — ✅ **сделано (JDBC + Redis проверены)**
 - [x] `cotp-jdbc`: `JdbcBurnStore`/`JdbcThrottleStore` поверх `DataSource`, DDL `JdbcStores`
       (`createSchema`); атомарность на PK/unique-констрейнтах и `UPDATE ... failures+1`.
-      **Проверено на H2** (11 тестов, включая конкурентный инкремент и `evictExpired`).
+      **Проверено на H2** (15 тестов, включая конкурентный инкремент, `evictExpired` и `JdbcUtil`).
 - [x] `cotp-redis`: `RedisBurnStore`/`RedisThrottleStore` (Lettuce; `SET NX` + нативный TTL,
       `HINCRBY`); реализовано, но проверка требует живого Redis.
 - [x] `cotp-store-contract`: переиспользуемые JUnit5 контракты `BurnStore`/`ThrottleStore`
       (используются JDBC и Redis).
 - DoD: модули с внешней зависимостью собраны; conformance-контракт есть.
-- [x] Redis-контракт прогнан на **живом Redis** (Docker `redis:7-alpine`, `COTP_REDIS_URI`) — **9/9**;
-      JDBC-контракт на H2 — **11/11**. (Попутно исправлен общий контракт: фиксированный `expiresAt`
+- [x] Redis-контракт прогнан на **живом Redis** (Docker `redis:7-alpine`, `COTP_REDIS_URI`) — **12/12**;
+      JDBC-контракт на H2 — **15/15**. (Попутно исправлен общий контракт: фиксированный `expiresAt`
       заменён на далёкое будущее, иначе TTL-нативные хранилища истекали mid-assertion.)
 
 ### [P2-H] KMS-адаптер `SecretCipher` — **[СУБАГЕНТ] + [ИНФРА]**
@@ -189,11 +189,11 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 - [x] Maven Wrapper (`mvnw`/`mvnw.cmd`), `.gitignore`, `LICENSE` (MIT), `CHANGELOG.md`, root `README.md`.
 - [x] GitHub Actions `.github/workflows/ci.yml` (JDK 17/21, `mvn -B -f cotp-java/pom.xml verify`).
 - [x] JPMS `module-info.java` (`module com.cotp { exports com.cotp; }`).
-- [x] JaCoCo coverage + Maven Enforcer (`requireJavaVersion [17,)`); локально `mvnw verify` — **BUILD SUCCESS**, 40 тестов.
+- [x] JaCoCo coverage + Maven Enforcer (`requireJavaVersion [17,)`); локально `mvnw verify` — **BUILD SUCCESS**, 43 теста.
 - [ ] **Статический анализ** (ErrorProne/SpotBugs) в сборке/CI — **не добавлен**.
 - [x] CI на GitHub прогнан: **JDK 21 — зелёный**; **JDK 17** выявил падение (`ProviderException`
       в AES-GCM на усечённом шифртексте) — **исправлено** (guard длины + `catch RuntimeException`),
-      локально ядро перепроверено (175/40).
+      локально ядро перепроверено (178/42).
 
 ### [Q-B] Расширенное тестирование — **[СУБАГЕНТ]**
 - Property-based/fuzz (jqwik): `Base32.decode`, `Cell.parse`, деривация, границы словаря.
@@ -291,5 +291,14 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 - [x] Распределённые хранилища (P2-G): `cotp-jdbc` (H2-проверено) + `cotp-redis` (Lettuce,
       live-тесты [ИНФРА]) + `cotp-store-contract`.
 - [x] PDF+QR карты (U-C): `cotp-pdf` (PDFBox+ZXing).
-- [x] Тесты: ядро self-test 175/175, JUnit 40/40; модули: metrics 24, jdbc 11, pdf 5, redis 9
-      (skipped без `COTP_REDIS_URI`).
+- [x] Аудит (round 4) — исправлено: idle-вытеснение throttle (C1, lockout bypass), кодирование
+      Redis-ключей (C2, коллизия `:`), уточнение контракта COOLDOWN (C3), TIME_BASED TTL при
+      `timeWindowBack=0` (C4), утечка PIN-хэша в демо (C6), обёртка Redis-исключений (C7),
+      гейтинг эвикции JDBC + `purge()` (C8); добавлены регресс-тесты. C5 пропущен (недостижимо).
+- [x] Аудит (round 5) — исправлено: Redis-индекс челленджей теперь ZSET с trim (N1), TTL TIME_BASED =
+      остаток окна (N2), `getNextException` в JDBC (N3), синхронизация доков (N4), sanitize/обёртка PDF
+      (N5), null-safe `SchemeRegistry` (N6), границы окон схемы (N7); delta-аудит доработал: TTL индекса
+      Redis не уменьшается (N1), TTL TIME_BASED с долями секунды (N2), обёртка `create()`/`close()`
+      (C7); добавлены тесты (ядро 43, jdbc 15, redis 12).
+- [x] Тесты: ядро self-test 178/178, JUnit 43/43; модули: metrics 24, jdbc 15, pdf 5, redis 12
+      (на живом Redis; без `COTP_REDIS_URI` — skipped).

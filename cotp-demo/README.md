@@ -44,8 +44,8 @@ Stop it with `Ctrl+C`. On Windows, if script execution is disabled, use the
 ## What to click (guided walkthrough)
 
 1. **Enrolment.** Leave the defaults (SINGLE, CELL, RANDOM, PIN `1234`) and click
-   **Enrol / regenerate card**. You get a `card_id`, the derived **PIN hash**, the printed 5×5
-   grid, and the exact `CotpCardPrinter.render(...)` text. Switch the layout to **WORD_PAIRS** and
+   **Enrol / regenerate card**. You get a `card_id`, the printed 5×5 grid, and the exact
+   `CotpCardPrinter.render(...)` text. The derived PIN hash is **redacted** in the UI. Switch the layout to **WORD_PAIRS** and
    re-enrol to see TOP/BOTTOM word pairs in every cell.
 2. **Challenge.** Click **Issue challenge**. The requested cell is shown large, with a live TTL
    timer. In TIME_BASED mode the same time step always yields the same cell.
@@ -71,7 +71,7 @@ Stop it with `Ctrl+C`. On Windows, if script execution is disabled, use the
 | Method | Path             | Body (JSON)                                                        | Returns |
 |--------|------------------|--------------------------------------------------------------------|---------|
 | GET    | `/api/state`     | –                                                                  | full session state + audit log |
-| POST   | `/api/enroll`    | `{layout,pin,burnPolicy,challengeMode,ttlSeconds,cooldownSeconds,maxFailures,lockSeconds,pinIterations}` | card grid, `card_id`, PIN hash, state |
+| POST   | `/api/enroll`    | `{layout,pin,burnPolicy,challengeMode,ttlSeconds,cooldownSeconds,maxFailures,lockSeconds,pinIterations}` | card grid, `card_id`, state (PIN hash redacted) |
 | POST   | `/api/challenge` | `{}` or `{"cellId":"C2"}`                                          | new challenge + state |
 | POST   | `/api/verify`    | `{"challengeId":"…","word":"…","pin":"…"}`                         | `VerificationResult` + state |
 | POST   | `/api/reset`     | `{}`                                                               | cleared state |
@@ -90,7 +90,7 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/challenge -Content
 
 - **Demo only / ephemeral state.** Everything lives in memory and is lost on restart. The card
   secret is kept server-side and is deliberately **not** exposed by the API; the `card_id`,
-  printable grid and PIN hash are shown for teaching purposes.
+  printable grid are shown for teaching purposes (the PIN hash is redacted).
 - **No secrets in the UI log.** Per the spec, the audit panel records results and state changes
   only; submitted words and PINs are never logged. The default PIN hashing iteration count is
   lowered to 10 000 for a snappy demo (configurable up to 1 000 000); production uses 210 000+.

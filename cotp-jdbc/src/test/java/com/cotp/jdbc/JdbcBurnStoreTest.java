@@ -27,7 +27,7 @@ class JdbcBurnStoreTest extends AbstractBurnStoreContract {
             Instant now = Instant.parse("2026-10-06T12:00:00Z");
             store.markChallengeUsed("card", "old", now.minusSeconds(1));
             store.markChallengeUsed("card", "future", now.plusSeconds(600));
-            store.evictExpired(now);
+            store.purge(now);
             assertFalse(store.isChallengeUsed("old"));
             assertTrue(store.isChallengeUsed("future"));
         } catch (SQLException e) {

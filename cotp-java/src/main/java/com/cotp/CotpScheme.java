@@ -88,6 +88,9 @@ public final class CotpScheme {
         if (timeWindowBack < 0 || timeWindowForward < 0) {
             throw new CotpConfigurationException("time windows must be >= 0");
         }
+        if (timeWindowBack > 100_000 || timeWindowForward > 100_000) {
+            throw new CotpConfigurationException("time windows are unreasonably large (max 100000)");
+        }
         if (version == null || version.isBlank() || version.indexOf('|') >= 0
                 || Validation.hasBlankOrFormatChar(version)) {
             throw new CotpConfigurationException("version must be non-blank and must not contain '|'");

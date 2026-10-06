@@ -43,7 +43,8 @@ public final class JdbcStores {
                     + " failures INT NOT NULL,"
                     + " locked_until BIGINT,"
                     + " last_access BIGINT,"
-                    + " PRIMARY KEY (card_id))"
+                    + " PRIMARY KEY (card_id))",
+            "CREATE INDEX IF NOT EXISTS idx_cotp_throttle_access ON cotp_throttle (last_access)"
     };
 
     /**

@@ -125,6 +125,50 @@ class CotpTest {
     }
 
     @Test
+    void timeBasedWithZeroBackwardWindow() {
+        CotpScheme scheme = CotpScheme.builder().timeWindowBack(0).build();
+        Cotp cotp = new Cotp(scheme, CotpPolicy.builder().challengeMode(ChallengeMode.TIME_BASED).build());
+        CotpCard card = cotp.generateCard("ZERO");
+        Instant now = Instant.parse("2026-10-06T12:00:00Z");
+        CotpChallenge ch = cotp.challengeGenerator().timeBased(card, now);
+        assertTrue(ch.expiresAt().isAfter(now));
+        assertEquals(VerificationResult.OK,
+                cotp.verifier().verify(card, null, ch, card.wordAt(ch.cell()), null, now));
+    }
+
+    @Test
+    void timeBasedTtlMatchesWindowRemainder() {
+        // back=1, forward=1, step=30; issue at step 100 + 29s (late in the step). Valid while the
+        // verifier's step is within [99, 101], i.e. until (100+1+1)*30 = 3060s.
+        CotpScheme scheme = CotpScheme.builder().timeWindowBack(1).timeWindowForward(1).build();
+        Cotp cotp = new Cotp(scheme, CotpPolicy.builder().challengeMode(ChallengeMode.TIME_BASED).build());
+        CotpCard card = cotp.generateCard("BOUND");
+        Instant issue = Instant.ofEpochSecond(100L * 30 + 29); // 3029s
+        CotpChallenge ch = cotp.challengeGenerator().timeBased(card, issue);
+        assertFalse(ch.expiresAt().isAfter(Instant.ofEpochSecond(3060)), "TTL is the window remainder");
+        // still verifiable just before the boundary...
+        assertEquals(VerificationResult.OK,
+                cotp.verifier().verify(card, null, ch, card.wordAt(ch.cell()), null, issue.plusSeconds(30)));
+        // ...and expired (not merely invalid) exactly at it
+        assertEquals(VerificationResult.CHALLENGE_EXPIRED,
+                cotp.verifier().verify(card, null, ch, card.wordAt(ch.cell()), null, issue.plusSeconds(31)));
+    }
+
+    @Test
+    void timeBasedTtlFractionalBoundary() {
+        CotpScheme scheme = CotpScheme.builder().timeWindowBack(1).timeWindowForward(1).build();
+        Cotp cotp = new Cotp(scheme, CotpPolicy.builder().challengeMode(ChallengeMode.TIME_BASED).build());
+        CotpCard card = cotp.generateCard("FRAC");
+        // issue at step 100 + 29.5 s; window end boundary is exactly 3060 s
+        Instant issue = Instant.ofEpochMilli((100L * 30 + 29) * 1000L + 500L);
+        CotpChallenge ch = cotp.challengeGenerator().timeBased(card, issue);
+        assertFalse(ch.expiresAt().isAfter(Instant.ofEpochSecond(3060)), "TTL must not overshoot the boundary");
+        Instant atBoundaryHalf = Instant.ofEpochSecond(3060).plusMillis(500);
+        assertEquals(VerificationResult.CHALLENGE_EXPIRED,
+                cotp.verifier().verify(card, null, ch, card.wordAt(ch.cell()), null, atBoundaryHalf));
+    }
+
+    @Test
     void base32RoundTrip() {
         byte[] data = {0x00, 0x01, 0x02, (byte) 0xff, 0x10};
         assertTrue(java.util.Arrays.equals(data, Base32.decode(Base32.encode(data))));
@@ -366,7 +410,8 @@ class CotpTest {
         Cotp capGen = new Cotp(CotpPolicy.builder().challengeMode(ChallengeMode.TIME_BASED).build());
         Instant now = Instant.parse("2026-10-06T12:00:00Z");
         CotpChallenge ch = capGen.challengeGenerator().timeBased(card, now);
-        assertTrue(!ch.expiresAt().isAfter(now.plusSeconds(30)));
+        // coverage = (timeWindowBack + 1) * step = (1 + 1) * 30 = 60 s, capped by the policy TTL
+        assertTrue(!ch.expiresAt().isAfter(now.plusSeconds(60)));
     }
 
     @Test
@@ -419,7 +464,11 @@ class CotpTest {
         InMemoryThrottleStore ts = new InMemoryThrottleStore();
         ts.incrementFailure("TH");
         assertEquals(1, ts.failureCount("TH"));
-        ts.purge(t0.plusSeconds(10), Duration.ofHours(1));
+        // C1 regression: an active failure counter must survive an idle sweep.
+        ts.purge(Instant.now(), Duration.ofHours(1));
+        assertEquals(1, ts.failureCount("TH"));
+        // ...but becomes evictable once idle.
+        ts.purge(Instant.now().plus(Duration.ofHours(2)), Duration.ofHours(1));
         assertEquals(0, ts.failureCount("TH"));
     }
 

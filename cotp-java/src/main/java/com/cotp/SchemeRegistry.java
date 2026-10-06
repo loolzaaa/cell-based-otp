@@ -58,6 +58,9 @@ public final class SchemeRegistry {
      * @throws CotpException if the version is unknown
      */
     public CotpScheme resolve(String version) {
+        if (version == null) {
+            throw new CotpException("Unknown scheme version: null");
+        }
         CotpScheme scheme = byVersion.get(version);
         if (scheme == null) {
             throw new CotpException("Unknown scheme version: '" + version + "'. Registered: " + versions());
@@ -65,9 +68,9 @@ public final class SchemeRegistry {
         return scheme;
     }
 
-    /** @return {@code true} if the version is registered. */
+    /** @return {@code true} if the version is registered (never throws for {@code null}). */
     public boolean contains(String version) {
-        return byVersion.containsKey(version);
+        return version != null && byVersion.containsKey(version);
     }
 
     /** @return an immutable snapshot of the registered versions. */

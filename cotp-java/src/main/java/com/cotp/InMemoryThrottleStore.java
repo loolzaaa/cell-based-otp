@@ -50,12 +50,17 @@ public final class InMemoryThrottleStore implements ThrottleStore {
     public void lockUntil(String cardId, Instant until) {
         State s = state(cardId);
         s.lockedUntil = until;
-        touch(s, until);
+        touch(s, Instant.now());
     }
 
     @Override
     public int incrementFailure(String cardId) {
-        return state(cardId).failures.incrementAndGet();
+        State s = state(cardId);
+        int failures = s.failures.incrementAndGet();
+        // Touch last-access so that a failure-only state is NOT treated as idle and evicted by
+        // evictIdle/purge (which would silently reset the brute-force counter and bypass lockout).
+        touch(s, Instant.now());
+        return failures;
     }
 
     @Override

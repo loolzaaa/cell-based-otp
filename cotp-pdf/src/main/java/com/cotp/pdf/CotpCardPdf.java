@@ -101,7 +101,9 @@ public final class CotpCardPdf {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             doc.save(out);
             return out.toByteArray();
-        } catch (IOException e) {
+        } catch (CotpPdfException e) {
+            throw e;
+        } catch (IOException | RuntimeException e) {
             throw new CotpPdfException("Failed to render COTP card to PDF", e);
         }
     }
@@ -239,7 +241,7 @@ public final class CotpCardPdf {
     private static List<String> wrap(String text, PDFont font, float size, float maxWidth) throws IOException {
         List<String> lines = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        for (String word : text.split("\\s+")) {
+        for (String word : sanitize(text).split("\\s+")) {
             String candidate = current.length() == 0 ? word : current + " " + word;
             float width = font.getStringWidth(candidate) / 1000f * size;
             if (width > maxWidth && current.length() > 0) {
@@ -263,8 +265,9 @@ public final class CotpCardPdf {
 
     private static void drawCentered(PDPageContentStream cs, PDFont font, float size, String text,
                                      float centerX, float centerY) throws IOException {
-        float width = font.getStringWidth(text) / 1000f * size;
-        drawText(cs, font, size, text, centerX - width / 2f, centerY - size * 0.36f);
+        String safe = sanitize(text);
+        float width = font.getStringWidth(safe) / 1000f * size;
+        drawText(cs, font, size, safe, centerX - width / 2f, centerY - size * 0.36f);
     }
 
     private static void drawText(PDPageContentStream cs, PDFont font, float size, String text,
@@ -272,7 +275,30 @@ public final class CotpCardPdf {
         cs.beginText();
         cs.setFont(font, size);
         cs.newLineAtOffset(x, baselineY);
-        cs.showText(text);
+        cs.showText(sanitize(text));
         cs.endText();
+    }
+
+    /**
+     * Maps characters not representable by the standard-14 WinAnsi fonts to {@code '?'} (and
+     * collapses line breaks to spaces) so rendering never fails on arbitrary card ids / titles /
+     * custom dictionaries. Localised (non-Latin) output would require an embedded Unicode font.
+     */
+    private static String sanitize(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\n' || c == '\r' || c == '\t') {
+                sb.append(' ');
+            } else if ((c >= 0x20 && c <= 0x7E) || (c >= 0xA0 && c <= 0xFF)) {
+                sb.append(c);
+            } else {
+                sb.append('?');
+            }
+        }
+        return sb.toString();
     }
 }

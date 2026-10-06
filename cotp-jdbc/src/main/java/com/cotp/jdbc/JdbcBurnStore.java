@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
 
 /**
@@ -42,7 +43,11 @@ public final class JdbcBurnStore implements BurnStore {
     private static final String SQL_DELETE_CHALLENGES = "DELETE FROM cotp_challenge WHERE card_id = ?";
     private static final String SQL_EVICT = "DELETE FROM cotp_challenge WHERE expires_at <= ?";
 
+    /** Gate for the best-effort {@link #evictExpired(Instant)} sweep on the hot verification path. */
+    private static final int EVICT_GATE = 1024;
+
     private final DataSource dataSource;
+    private final AtomicLong evictCounter = new AtomicLong();
 
     public JdbcBurnStore(DataSource dataSource) {
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource");
@@ -183,6 +188,21 @@ public final class JdbcBurnStore implements BurnStore {
 
     @Override
     public void evictExpired(Instant now) {
+        // Best-effort: avoid issuing a DELETE on every verification; call purge(now) for an
+        // unconditional sweep (e.g. from a scheduled task).
+        if (now == null || (evictCounter.incrementAndGet() & (EVICT_GATE - 1)) != 0) {
+            return;
+        }
+        purge(now);
+    }
+
+    /**
+     * Unconditionally deletes used-challenge rows whose expiry is at or before {@code now}.
+     * Safe to call from a scheduled task.
+     *
+     * @param now current instant
+     */
+    public void purge(Instant now) {
         if (now == null) {
             return;
         }

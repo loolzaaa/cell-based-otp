@@ -224,11 +224,11 @@ boolean ok = cotp.verifyPin("1234".toCharArray(), pinHash);
 | `BurnStore` | сожжённые ячейки (`CELL`), метки cooldown (`COOLDOWN`), использованные челленджи | `InMemoryBurnStore` |
 | `ThrottleStore` | последовательные неудачи, lockout по `cardId` | `InMemoryThrottleStore` |
 
-`InMemory*` — для **одного узла**; состояние теряется при рестарте. Для кластера нужны
-распределённые реализации (Redis/БД) с **атомарным check-and-set** (`markCellBurned`,
-`markChallengeUsed`, `incrementFailure`). Таких модулей (`cotp-redis`/`cotp-jdbc`) пока нет — это
-отдельные задачи (`TODO.md` P2-G). Периодическая эвикция: `InMemoryBurnStore.purge(now)`,
-`InMemoryThrottleStore.purge(now, idleTtl)`.
+`InMemory*` — для **одного узла**; состояние теряется при рестарте. Для кластера используйте
+готовые модули **`cotp-redis`** (`RedisBurnStore`/`RedisThrottleStore`, Lettuce) и **`cotp-jdbc`**
+(`JdbcBurnStore`/`JdbcThrottleStore` + `JdbcStores.createSchema`); общий контракт — модуль
+`cotp-store-contract`. Атомарность обеспечивают `markCellBurned`, `markChallengeUsed`,
+`incrementFailure`. Периодическая эвикция: `purge(now)` / `purge(now, idleTtl)`.
 
 ```java
 BurnStore burnStore = new InMemoryBurnStore();
@@ -282,7 +282,8 @@ Cotp cotp2 = new Cotp(CotpScheme.defaults(), resolver);
   по умолчанию подставляется `CHALLENGE`.
 - `challengeTtl`, `cellCooldown`, `lockDuration` > 0; `pinIterations ≥ 1000` (default 210 000);
   `maxFailures ≥ 1` (default 5), `lockDuration` default 15 мин.
-- Для `TIME_BASED` TTL автоматически ограничен `min(challengeTtl, timeWindowBack · timeStepSeconds)`.
+- Для `TIME_BASED` TTL автоматически ограничен остатком окна:
+  `min(challengeTtl, (issueStep + timeWindowBack + 1)·step − now)`.
 
 ---
 
