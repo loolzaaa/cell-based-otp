@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COTP — Card-based OTP web demo</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #182033;
+    --panel2: #1f2a42;
+    --line: #2c3a58;
+    --text: #e6ecf7;
+    --muted: #93a2c0;
+    --accent: #4f8cff;
+    --accent2: #2fd4a7;
+    --danger: #ff5d6c;
+    --warn: #ffb54f;
+    --ok: #2fd4a7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+  }
+  header {
+    padding: 14px 20px; background: linear-gradient(90deg, #17203a, #101728);
+    border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 14px;
+    position: sticky; top: 0; z-index: 5; flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  header .status { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555; margin-right: 6px; }
+  .dot.on { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+  main {
+    display: grid; grid-template-columns: minmax(340px, 1fr) minmax(380px, 1.1fr);
+    gap: 16px; padding: 16px 20px 40px; max-width: 1500px; margin: 0 auto;
+  }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  section {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px;
+  }
+  section h2 {
+    margin: 0 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: .8px;
+    color: var(--accent); display: flex; align-items: center; gap: 8px;
+  }
+  section h2 .step {
+    background: var(--accent); color: #06101f; border-radius: 6px; padding: 1px 7px;
+    font-size: 12px; font-weight: 700;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+  input, select, button { font: inherit; }
+  input[type=text], input[type=password], input[type=number], select {
+    width: 100%; padding: 7px 9px; background: #0d1422; color: var(--text);
+    border: 1px solid var(--line); border-radius: 7px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 12px; }
+  button {
+    cursor: pointer; border: none; border-radius: 7px; padding: 8px 14px;
+    background: var(--accent); color: #06101f; font-weight: 600; margin-top: 10px;
+  }
+  button:hover { filter: brightness(1.1); }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ghost:hover { border-color: var(--accent); }
+  button.small { padding: 5px 10px; font-size: 12px; margin-top: 6px; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; }
+  .kv .k { color: var(--muted); }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; }
+  .cardid { word-break: break-all; color: var(--accent2); }
+  .hash { word-break: break-all; color: var(--muted); font-size: 11px; }
+  table.card { border-collapse: collapse; margin-top: 8px; width: 100%; table-layout: fixed; }
+  table.card th, table.card td {
+    border: 1px solid var(--line); padding: 5px 4px; text-align: center; font-size: 13px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  table.card th { background: var(--panel2); color: var(--muted); font-weight: 600; }
+  table.card td.rowh { width: 34px; color: var(--muted); background: var(--panel2); font-weight: 600; }
+  table.card td .word { display: block; }
+  table.card td .word.top { border-bottom: 1px dashed var(--line); padding-bottom: 2px; margin-bottom: 2px; }
+  table.card td.challenged { background: #21406e; outline: 2px solid var(--accent); }
+  table.card td.burned { background: #3a2230; color: #ff9aa4; }
+  table.card td.cooling { background: #37301f; color: #ffd08a; }
+  table.card td.challenged.burned { background: #4a2233; }
+  pre.printed {
+    background: #0d1422; border: 1px solid var(--line); border-radius: 7px; padding: 10px;
+    overflow: auto; font-size: 11.5px; color: #bcd0f0; max-height: 260px;
+  }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px; font-weight: 700;
+    font-size: 12px; letter-spacing: .4px;
+  }
+  .badge.OK { background: rgba(47,212,167,.18); color: var(--ok); border: 1px solid var(--ok); }
+  .badge.bad { background: rgba(255,93,108,.15); color: var(--danger); border: 1px solid var(--danger); }
+  .badge.warn { background: rgba(255,181,79,.15); color: var(--warn); border: 1px solid var(--warn); }
+  .challenge-box {
+    margin-top: 10px; background: #101a30; border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px; text-align: center;
+  }
+  .cellbig { font-size: 40px; font-weight: 800; letter-spacing: 2px; color: var(--accent); }
+  .ttlwrap { height: 8px; background: #0a0f19; border-radius: 6px; overflow: hidden; margin: 10px 0 6px; }
+  .ttlbar { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); width: 100%; transition: width .25s linear; }
+  .muted { color: var(--muted); }
+  .tag { font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--panel2); color: var(--muted); border: 1px solid var(--line); }
+  .audit { max-height: 330px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; }
+  .audit table { width: 100%; border-collapse: collapse; }
+  .audit td { padding: 4px 8px; border-bottom: 1px solid #202a40; vertical-align: top; font-size: 12px; }
+  .audit tr:last-child td { border-bottom: none; }
+  .audit .t { color: var(--muted); white-space: nowrap; font-family: Consolas, monospace; }
+  .audit .ty { white-space: nowrap; font-weight: 700; }
+  .ty.ENROLL { color: var(--accent2); }
+  .ty.CHALLENGE { color: var(--accent); }
+  .ty.VERIFY { color: #c9a6ff; }
+  .ty.LOCKOUT { color: var(--danger); }
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: #33202a; color: #ffb9c1; border: 1px solid var(--danger); padding: 9px 16px;
+    border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 80vw; z-index: 20;
+  }
+  .toast.show { opacity: 1; }
+  .toast.info { background: #122c28; color: #b6f2df; border-color: var(--accent2); }
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  .warn-inline { color: var(--warn); }
+  .pill { font-size: 11px; border: 1px solid var(--line); border-radius: 20px; padding: 2px 9px; color: var(--muted); }
+  .empty { color: var(--muted); font-style: italic; padding: 8px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>COTP — Card-based OTP</h1>
+  <span class="sub">real library · <code>com.sun.net.httpserver</code> · no Maven</span>
+  <span class="status"><span id="dot" class="dot"></span><span id="statusText">connecting…</span></span>
+</header>
+
+<main>
+  <!-- ============ LEFT ============ -->
+  <div class="col">
+    <section>
+      <h2><span class="step">1</span> Enrolment — generate a card</h2>
+      <div class="grid2">
+        <div>
+          <label for="layout">Layout preset</label>
+          <select id="layout">
+            <option value="SINGLE">SINGLE — 5×5 (25 words)</option>
+            <option value="WORD_PAIRS">WORD_PAIRS — 5×5×2 (TOP/BOTTOM)</option>
+          </select>
+        </div>
+        <div>
+          <label for="pin">Enrolment PIN</label>
+          <input id="pin" type="text" value="1234" autocomplete="off">
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label for="burnPolicy">BurnPolicy</label>
+          <select id="burnPolicy">
+            <option value="CELL">CELL — strict one-time cell</option>
+            <option value="COOLDOWN">COOLDOWN — reusable after cooldown</option>
+            <option value="CHALLENGE">CHALLENGE — one-time challenge only</option>
+            <option value="NONE">NONE — no burn (testing)</option>
+          </select>
+        </div>
+        <div>
+          <label for="challengeMode">ChallengeMode</label>
+          <select id="challengeMode">
+            <option value="RANDOM">RANDOM — CSPRNG cell</option>
+            <option value="TIME_BASED">TIME_BASED — HMAC/time cell</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid3">
+        <div><label for="ttlSeconds">TTL (s)</label><input id="ttlSeconds" type="number" value="120" min="5"></div>
+        <div><label for="cooldownSeconds">Cooldown (s)</label><input id="cooldownSeconds" type="number" value="30" min="1"></div>
+        <div><label for="pinIterations">PBKDF2 iter</label><input id="pinIterations" type="number" value="10000" min="1000" step="1000"></div>
+      </div>
+      <div class="grid2">
+        <div><label for="maxFailures">Max failures</label><input id="maxFailures" type="number" value="3" min="1"></div>
+        <div><label for="lockSeconds">Lockout (s)</label><input id="lockSeconds" type="number" value="30" min="1"></div>
+      </div>
+      <div class="row">
+        <button id="btnEnroll">Enrol / regenerate card</button>
+        <button id="btnReset" class="ghost small">Reset session</button>
+      </div>
+      <div class="note" id="compatNote">
+        TIME_BASED cannot be combined with CELL/COOLDOWN burn (the library rejects it — a time-derived
+        cell would be rejected on reuse). Selecting TIME_BASED defaults BurnPolicy to CHALLENGE; choosing
+        CELL/COOLDOWN while TIME_BASED is active resets ChallengeMode to RANDOM.
+      </div>
+    </section>
+
+    <section>
+      <h2>Card</h2>
+      <div id="cardMeta" class="empty">No card yet — click “Enrol / regenerate card”.</div>
+      <div id="gridWrap"></div>
+      <div id="printedWrap"></div>
+    </section>
+  </div>
+
+  <!-- ============ RIGHT ============ -->
+  <div class="col">
+    <section>
+      <h2><span class="step">2</span> Challenge</h2>
+      <div class="row">
+        <button id="btnChallenge">Issue challenge</button>
+        <input id="forcedCell" type="text" placeholder="force cell id, e.g. C2" style="max-width:160px">
+        <button id="btnForce" class="ghost small">Force this cell</button>
+      </div>
+      <div id="challengeBox"></div>
+    </section>
+
+    <section>
+      <h2><span class="step">3</span> Verify</h2>
+      <div class="grid2">
+        <div>
+          <label for="word">Word (read from the card)</label>
+          <input id="word" type="text" autocomplete="off" placeholder="e.g. hope">
+        </div>
+        <div>
+          <label for="pinVerify">PIN</label>
+          <input id="pinVerify" type="text" value="1234" autocomplete="off">
+        </div>
+      </div>
+      <div class="row">
+        <button id="btnVerify">Verify</button>
+        <button id="btnAutofill" class="ghost small">Auto-fill word from challenged cell</button>
+        <button id="btnReplay" class="ghost small">Re-verify last challenge (replay)</button>
+      </div>
+      <div id="verifyBox" style="margin-top:10px"></div>
+    </section>
+
+    <section>
+      <h2>Server-side state</h2>
+      <div id="stateBox" class="empty">—</div>
+    </section>
+
+    <section>
+      <h2><span class="step">5</span> Audit / event log (server side)</h2>
+      <div class="note">Only outcomes and state changes are logged — never the submitted word or PIN.</div>
+      <div class="audit"><table id="auditTable"><tbody id="auditBody"></tbody></table></div>
+    </section>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+let state = null;
+let serverOffsetMs = 0;   // clientNow - serverNow
+let tickHandle = null;
+
+const $ = (id) => document.getElementById(id);
+
+function toastMsg(msg, isInfo) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.toggle("info", !!isInfo);
+  t.classList.add("show");
+  clearTimeout(toastMsg._h);
+  toastMsg._h = setTimeout(() => t.classList.remove("show", "info"), 4500);
+}
+
+function showError(msg) { toastMsg(msg, false); }
+function showNotice(msg) { toastMsg(msg, true); }
+
+async function api(path, method = "GET", body = null) {
+  const opts = { method, headers: {} };
+  if (body !== null) {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(path, opts);
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { error: text }; }
+  if (!res.ok) {
+    throw new Error(data && data.error ? data.error : ("HTTP " + res.status));
+  }
+  return data;
+}
+
+function cfg() {
+  let burnPolicy = $("burnPolicy").value;
+  let challengeMode = $("challengeMode").value;
+  // Never submit the forbidden TIME_BASED + CELL/COOLDOWN pair, even if the widgets are out of sync.
+  if (challengeMode === "TIME_BASED" && (burnPolicy === "CELL" || burnPolicy === "COOLDOWN")) {
+    challengeMode = "RANDOM";
+  }
+  return {
+    layout: $("layout").value,
+    pin: $("pin").value,
+    burnPolicy: burnPolicy,
+    challengeMode: challengeMode,
+    ttlSeconds: Number($("ttlSeconds").value),
+    cooldownSeconds: Number($("cooldownSeconds").value),
+    maxFailures: Number($("maxFailures").value),
+    lockSeconds: Number($("lockSeconds").value),
+    pinIterations: Number($("pinIterations").value)
+  };
+}
+
+async function refresh() {
+  try {
+    state = await api("/api/state");
+    serverOffsetMs = Date.now() - Date.parse(state.serverTime);
+    $("dot").classList.add("on");
+    $("statusText").textContent = state.enrolled ? ("enrolled · " + state.config.burnPolicy + " · " + state.config.challengeMode)
+                                                  : "ready (not enrolled)";
+    render();
+  } catch (e) {
+    $("dot").classList.remove("on");
+    $("statusText").textContent = "disconnected";
+    showError("Cannot reach server: " + e.message);
+  }
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function fmtTime(iso) {
+  try { return new Date(iso).toLocaleTimeString(); } catch (e) { return iso; }
+}
+
+function render() {
+  renderCard();
+  renderChallenge();
+  renderState();
+  renderAudit();
+}
+
+function renderCard() {
+  if (!state.enrolled) {
+    $("cardMeta").className = "empty";
+    $("cardMeta").textContent = "No card yet — click “Enrol / regenerate card”.";
+    $("gridWrap").innerHTML = "";
+    $("printedWrap").innerHTML = "";
+    return;
+  }
+  const c = state.config;
+  $("cardMeta").className = "";
+  $("cardMeta").innerHTML =
+    '<div class="kv">' +
+      '<span class="k">card_id</span><span class="cardid mono">' + esc(state.cardId) + '</span>' +
+      '<span class="k">scheme</span><span>' + esc(state.scheme.version) + ' · ' +
+        esc(state.scheme.layout) + ' · ' + esc(state.scheme.slotCount) + ' slots</span>' +
+      '<span class="k">policy</span><span>' + esc(c.burnPolicy) + ' · ' + esc(c.challengeMode) +
+        ' · TTL ' + esc(c.ttlSeconds) + 's · cooldown ' + esc(c.cooldownSeconds) + 's</span>' +
+      '<span class="k">PIN hash</span><span class="hash mono" title="stored hash (demo)">' + esc(state.pinHash) + '</span>' +
+    '</div>';
+
+  const cells = {};
+  (state.cells || []).forEach(x => { cells[x.id] = x; });
+
+  const challenged = state.latestChallenge ? state.latestChallenge.cellId : null;
+  const burned = new Set(state.burnedCells || []);
+  const cooling = new Set((state.cooldownUses || []).filter(u => u.cooldownRemainingMs > 0).map(u => u.cellId));
+
+  const positions = state.scheme.positions;
+  const single = positions.length === 1;
+
+  function cellHtml(id) {
+    const cl = [];
+    if (challenged === id) cl.push("challenged");
+    if (burned.has(id)) cl.push("burned");
+    if (cooling.has(id)) cl.push("cooling");
+    const cls = cl.length ? ' class="' + cl.join(" ") + '"' : "";
+    return '<td' + cls + ' title="' + esc(id) + '">' + esc(cells[id] ? cells[id].word : "") + '</td>';
+  }
+
+  let html = '<table class="card"><thead><tr><th></th>';
+  state.scheme.columns.forEach(col => { html += '<th>' + esc(col) + '</th>'; });
+  html += '</tr></thead><tbody>';
+
+  if (single) {
+    state.scheme.rows.forEach(row => {
+      html += '<tr><td class="rowh">' + esc(row) + '</td>';
+      state.scheme.columns.forEach(col => { html += cellHtml(col + row); });
+      html += '</tr>';
+    });
+  } else {
+    state.scheme.rows.forEach(row => {
+      positions.forEach((pos, idx) => {
+        html += '<tr><td class="rowh">' + (idx === 0 ? esc(row) : "") + '</td>';
+        state.scheme.columns.forEach(col => { html += cellHtml(col + row + (pos === "SINGLE" ? "" : (pos === "TOP" ? "T" : "B"))); });
+        html += '</tr>';
+      });
+    });
+  }
+  html += '</tbody></table>';
+  $("gridWrap").innerHTML = html;
+
+  $("printedWrap").innerHTML =
+    '<label>Printable text (<code>CotpCardPrinter.render</code>)</label>' +
+    '<pre class="printed">' + esc(state.printed) + '</pre>';
+}
+
+function renderChallenge() {
+  const box = $("challengeBox");
+  const ch = state.enrolled ? state.latestChallenge : null;
+  if (!ch) {
+    box.className = "empty";
+    box.textContent = "No challenge issued yet.";
+    return;
+  }
+  box.className = "challenge-box";
+  box.innerHTML =
+    '<div class="muted">Requested cell</div>' +
+    '<div class="cellbig">' + esc(ch.cellId) + '</div>' +
+    '<div><span class="tag">' + esc(ch.mode) + '</span> ' +
+      '<span class="muted">cell ' + esc(ch.cell.column) + esc(ch.cell.row) +
+      (ch.cell.position === "SINGLE" ? "" : " · " + esc(ch.cell.position)) + '</span></div>' +
+    '<div class="ttlwrap"><div class="ttlbar" id="ttlbar"></div></div>' +
+    '<div class="muted" id="ttlText">—</div>' +
+    '<div class="muted" style="margin-top:6px;font-size:11px">challenge_id <span class="mono">' + esc(ch.challengeId) + '</span></div>';
+  tick();
+}
+
+function tick() {
+  const ch = state && state.latestChallenge;
+  const bar = $("ttlbar");
+  if (!ch || !bar) return;
+  const now = Date.now() - serverOffsetMs;
+  const total = ch.expiresAtEpochMs - Date.parse(ch.issuedAt);
+  const left = ch.expiresAtEpochMs - now;
+  const pct = total > 0 ? Math.max(0, Math.min(100, (left / total) * 100)) : 0;
+  bar.style.width = pct + "%";
+  bar.style.background = left <= 0 ? "var(--danger)"
+    : (pct < 25 ? "linear-gradient(90deg,#ff5d6c,#ffb54f)" : "linear-gradient(90deg,var(--accent2),var(--accent))");
+  $("ttlText").textContent = left <= 0
+    ? "expired"
+    : (Math.ceil(left / 1000) + "s remaining · expires " + fmtTime(ch.expiresAt));
+}
+
+function renderState() {
+  const box = $("stateBox");
+  if (!state.enrolled) { box.className = "empty"; box.textContent = "—"; return; }
+  box.className = "";
+  const burned = (state.burnedCells || []);
+  const cooling = (state.cooldownUses || []);
+  const locked = state.lockedUntilEpochMs && state.lockedUntilEpochMs > (Date.now() - serverOffsetMs);
+
+  let html = '<div class="kv">' +
+    '<span class="k">burned cells</span><span>' + (burned.length ? burned.join(", ") : "none") +
+      ' <span class="pill">' + burned.length + '/' + state.scheme.slotCount + '</span></span>' +
+    '<span class="k">cooldown uses</span><span>' + (cooling.length
+      ? cooling.map(u => u.cellId + (u.cooldownRemainingMs > 0 ? " (" + Math.ceil(u.cooldownRemainingMs / 1000) + "s)" : " (ready)")).join(", ")
+      : "none") + '</span>' +
+    '<span class="k">consecutive failures</span><span>' + state.failureCount + ' / ' + state.config.maxFailures + '</span>' +
+    '<span class="k">locked until</span><span class="' + (locked ? "warn-inline" : "") + '">' +
+      (state.lockedUntil ? esc(state.lockedUntil) + (locked ? " (locked)" : " (elapsed)") : "not locked") + '</span>' +
+    '<span class="k">challenges issued</span><span>' + (state.challengeCount || 0) + '</span>' +
+    '</div>';
+  box.innerHTML = html;
+}
+
+function renderAudit() {
+  const body = $("auditBody");
+  const entries = (state.audit || []).slice().reverse();
+  if (!entries.length) {
+    body.innerHTML = '<tr><td class="empty">No events yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = entries.map(e =>
+    '<tr><td class="t">' + esc(fmtTime(e.time)) + '</td>' +
+    '<td class="ty ' + esc(e.type) + '">' + esc(e.type) + '</td>' +
+    '<td>' + esc(e.message) + '</td></tr>').join("");
+}
+
+// ------------------------------------------------------------------ actions
+
+async function doEnroll() {
+  try {
+    state = await api("/api/enroll", "POST", cfg());
+    serverOffsetMs = Date.now() - Date.parse(state.serverTime);
+    $("pinVerify").value = $("pin").value;
+    $("verifyBox").innerHTML = "";
+    $("word").value = "";
+    render();
+    if (state.notice) showNotice(state.notice);
+    syncPolicyControls();
+  } catch (e) { showError(e.message); }
+}
+
+async function doChallenge(cellId) {
+  try {
+    const body = {};
+    if (cellId) body.cellId = cellId;
+    state = await api("/api/challenge", "POST", body);
+    serverOffsetMs = Date.now() - Date.parse(state.serverTime);
+    render();
+  } catch (e) { showError(e.message); }
+}
+
+async function doVerify() {
+  const ch = state && state.latestChallenge;
+  if (!ch) { showError("Issue a challenge first."); return; }
+  try {
+    const res = await api("/api/verify", "POST", {
+      challengeId: ch.challengeId,
+      word: $("word").value,
+      pin: $("pinVerify").value
+    });
+    state = res;
+    serverOffsetMs = Date.now() - Date.parse(state.serverTime);
+    render();
+    const cls = res.success ? "OK" : (/THROTTLED|EXHAUST|EXPIRED|REUSED|ALREADY_USED/.test(res.result) ? "warn" : "bad");
+    $("verifyBox").innerHTML =
+      '<span class="badge ' + cls + '">' + esc(res.result) + '</span> ' +
+      '<span class="muted">' + esc(res.message) + '</span>';
+  } catch (e) { showError(e.message); }
+}
+
+async function doReset() {
+  try {
+    state = await api("/api/reset", "POST", {});
+    serverOffsetMs = Date.now() - Date.parse(state.serverTime);
+    $("verifyBox").innerHTML = "";
+    $("word").value = "";
+    render();
+  } catch (e) { showError(e.message); }
+}
+
+function autofill() {
+  const ch = state && state.latestChallenge;
+  if (!ch) { showError("Issue a challenge first."); return; }
+  const cell = (state.cells || []).find(c => c.id === ch.cellId);
+  if (cell) {
+    $("word").value = cell.word;
+  } else {
+    showError("Challenged cell not found.");
+  }
+}
+
+// ------------------------------------------------------------------ wiring
+
+$("btnEnroll").addEventListener("click", doEnroll);
+$("btnChallenge").addEventListener("click", () => doChallenge(null));
+$("btnForce").addEventListener("click", () => doChallenge($("forcedCell").value.trim()));
+$("btnVerify").addEventListener("click", doVerify);
+$("btnReplay").addEventListener("click", doVerify);
+$("btnAutofill").addEventListener("click", autofill);
+$("btnReset").addEventListener("click", doReset);
+$("word").addEventListener("keydown", e => { if (e.key === "Enter") doVerify(); });
+$("pinVerify").addEventListener("keydown", e => { if (e.key === "Enter") doVerify(); });
+// Keep ChallengeMode and BurnPolicy mutually consistent with the library rule:
+// TIME_BASED is incompatible with CELL/COOLDOWN; TIME_BASED defaults burn to CHALLENGE.
+function syncPolicyControls() {
+  const mode = $("challengeMode").value;
+  const burn = $("burnPolicy").value;
+  const incompatible = mode === "TIME_BASED" && (burn === "CELL" || burn === "COOLDOWN");
+  $("burnPolicy").classList.toggle("warn-inline", incompatible);
+  $("compatNote").classList.toggle("warn-inline", incompatible);
+}
+
+$("challengeMode").addEventListener("change", () => {
+  const burn = $("burnPolicy");
+  if ($("challengeMode").value === "TIME_BASED"
+      && (burn.value === "CELL" || burn.value === "COOLDOWN")) {
+    burn.value = "CHALLENGE";
+    showNotice("BurnPolicy set to CHALLENGE: TIME_BASED cannot be combined with CELL/COOLDOWN burn.");
+  }
+  syncPolicyControls();
+});
+
+$("burnPolicy").addEventListener("change", () => {
+  if (($("burnPolicy").value === "CELL" || $("burnPolicy").value === "COOLDOWN")
+      && $("challengeMode").value === "TIME_BASED") {
+    $("challengeMode").value = "RANDOM";
+    showNotice("ChallengeMode reset to RANDOM: TIME_BASED cannot be combined with CELL/COOLDOWN burn.");
+  }
+  syncPolicyControls();
+});
+
+syncPolicyControls();
+refresh();
+tickHandle = setInterval(() => { tick(); refresh(); }, 1000);
+</script>
+</body>
+</html>
