@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-06
+
+First public release.
+
 ### Added
 
+- Zero-dependency Java implementation of Cell-based One-Time Password (COTP): deterministic
+  5x5 challenge-card authentication built on HKDF (RFC 5869) and HMAC-SHA-256.
+- Reference COTP v1 derivation vectors and a standalone, Maven-free verification harness.
+- JUnit 5 test suite (`cotp-java/src/test/java/ru/loolzaaa/CotpTest.java`).
 - Repository hygiene: root `LICENSE` (MIT), `.gitignore`, `CHANGELOG.md` and `README.md`.
 - Apache Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/wrapper/maven-wrapper.properties`).
 - GitHub Actions CI (`.github/workflows/ci.yml`) building and verifying on JDK 17 and 21 with Maven caching.
@@ -69,14 +77,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core: TIME_BASED TTL is computed with sub-second precision, so a fractionally-issued challenge is
   not "unexpired but unverifiable".
 
-## [1.0.0] - 2026-10-06
-
-### Added
-
-- Zero-dependency Java implementation of Cell-based One-Time Password (COTP): deterministic
-  5x5 challenge-card authentication built on HKDF (RFC 5869) and HMAC-SHA-256.
-- Reference COTP v1 derivation vectors and a standalone, Maven-free verification harness.
-- JUnit 5 test suite (`cotp-java/src/test/java/ru/loolzaaa/CotpTest.java`).
-
-[Unreleased]: https://example.invalid/cotp-java/compare/v1.0.0...HEAD
-[1.0.0]: https://example.invalid/cotp-java/releases/tag/v1.0.0
+[Unreleased]: https://github.com/loolzaaa/cell-based-otp/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/loolzaaa/cell-based-otp/releases/tag/v1.0.0

@@ -13,7 +13,7 @@
     <description>Cell-based One-Time Password (COTP): a zero-dependency Java library for
         deterministic 5x5 challenge-card authentication (an analog of Avatier Identity Challenge Card).
         Implements RFC 5869 (HKDF) on top of the JDK HMAC primitive; no third-party runtime dependencies.</description>
-    <url>https://example.invalid/cotp-java</url>
+    <url>https://github.com/loolzaaa/cell-based-otp</url>
 
     <licenses>
         <license>

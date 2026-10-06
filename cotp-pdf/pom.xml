@@ -13,7 +13,7 @@
     <description>Printable PDF card template for COTP: renders a 5x5 word grid (single-word and
         TOP/BOTTOM layouts), a QR code of the public card id and card metadata. Optional module;
         keeps the zero-dependency cotp-java core free of third-party runtime dependencies.</description>
-    <url>https://example.invalid/cotp-pdf</url>
+    <url>https://github.com/loolzaaa/cell-based-otp/tree/master/cotp-pdf</url>
 
     <licenses>
         <license>

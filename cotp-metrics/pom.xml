@@ -13,7 +13,7 @@
     <description>Observability adapter for the COTP library: translates CotpEvent audit events into
         Micrometer meters (Prometheus-ready). Keeps the zero-dependency cotp-java core free of any
         runtime dependency.</description>
-    <url>https://example.invalid/cotp-metrics</url>
+    <url>https://github.com/loolzaaa/cell-based-otp/tree/master/cotp-metrics</url>
 
     <licenses>
         <license>
