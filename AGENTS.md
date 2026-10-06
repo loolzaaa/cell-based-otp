@@ -14,9 +14,9 @@
 
 | Путь | Что |
 |---|---|
-| `cotp-java/src/main/java/com/cotp/` | Ядро библиотеки (ноль runtime-зависимостей). |
-| `cotp-java/src/main/resources/com/cotp/cotp-english.txt` | Словарь BIP-39 (2048 слов). |
-| `cotp-java/src/test/java/com/cotp/` | JUnit 5 тесты. |
+| `cotp-java/src/main/java/ru/loolzaaa/` | Ядро библиотеки (ноль runtime-зависимостей). |
+| `cotp-java/src/main/resources/ru/loolzaaa/cotp-english.txt` | Словарь BIP-39 (2048 слов). |
+| `cotp-java/src/test/java/ru/loolzaaa/` | JUnit 5 тесты. |
 | `cotp-java/tools/` | `CotpSelfTest` (автономная проверка), `CotpVectorPrinter` (векторы). |
 | `cotp-java/run-verify.ps1` | Сборка + self-test без Maven. |
 | `cotp-metrics/` | Опциональный модуль метрик (Micrometer), зависит от ядра. |
@@ -59,10 +59,10 @@ API, JUnit.
 
 ## Конвенции кода
 
-- Java 17 (`maven.compiler.release=17`), пакет `com.cotp`, JPMS-модуль `com.cotp` (`module-info`).
+- Java 17 (`maven.compiler.release=17`), пакет `ru.loolzaaa`, JPMS-модуль `ru.loolzaaa` (`module-info`).
 - Минимум комментариев; Javadoc на публичном API; идентификаторы на английском.
 - Неизменяемые типы по возможности; `record` для value-типов (`Cell`, `CotpChallenge`, `CotpEvent`).
-- Новые публичные классы автоматически экспортируются модулем `com.cotp`.
+- Новые публичные классы автоматически экспортируются модулем `ru.loolzaaa`.
 
 ## Как вносить изменения
 

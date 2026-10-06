@@ -29,7 +29,7 @@ foreach ($tool in 'java', 'javac') {
 $base      = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot  = Split-Path -Parent $base
 $coreJava  = Join-Path $repoRoot 'cotp-java\src\main\java'
-$coreRes   = Join-Path $repoRoot 'cotp-java\src\main\resources\com\cotp\cotp-english.txt'
+$coreRes   = Join-Path $repoRoot 'cotp-java\src\main\resources\ru\loolzaaa\cotp-english.txt'
 $demoJava  = Join-Path $base 'src'
 $webSrc    = Join-Path $base 'web'
 $build     = Join-Path $base 'build'
@@ -68,7 +68,7 @@ if ($LASTEXITCODE -ne 0) { throw "javac failed with exit code $LASTEXITCODE" }
 
 # Exhaustive completeness gate: a hardcoded subset (the earlier Json$Parser fix) cannot prove
 # the runtime classpath is whole, so a stale/partial build dir could still ship without a core
-# class and only fail at runtime, e.g. ClassNotFoundException: com.cotp.ConstantTime from
+# class and only fail at runtime, e.g. ClassNotFoundException: ru.loolzaaa.ConstantTime from
 # CotpVerifier.wordsMatch() during /api/verify. Instead, require that EVERY source file produced
 # its top-level .class, then cross-check the whole output dir against the source set.
 $missing = @()
@@ -101,7 +101,7 @@ Write-Host ("Verified all $($expected.Count) source files produced classes " +
     "($($produced.Count) .class files incl. nested; runtime classpath = $classes).") -ForegroundColor Green
 
 # Bundle the dictionary at the classpath location the library expects.
-$resOut = Join-Path $classes 'com\cotp'
+$resOut = Join-Path $classes 'ru\loolzaaa'
 New-Item -ItemType Directory -Force -Path $resOut | Out-Null
 Copy-Item -LiteralPath $coreRes -Destination (Join-Path $resOut 'cotp-english.txt') -Force
 
@@ -122,10 +122,10 @@ Write-Host "(the server prints the listening URL below)" -ForegroundColor DarkGr
 Write-Host ""
 
 if ($NoStop) {
-    & java "-Dfile.encoding=UTF-8" -cp $classes com.cotp.demo.DemoServer $Port
+    & java "-Dfile.encoding=UTF-8" -cp $classes ru.loolzaaa.demo.DemoServer $Port
 } else {
     try {
-        & java "-Dfile.encoding=UTF-8" -cp $classes com.cotp.demo.DemoServer $Port
+        & java "-Dfile.encoding=UTF-8" -cp $classes ru.loolzaaa.demo.DemoServer $Port
     } finally {
         Write-Host "Demo stopped." -ForegroundColor Green
     }

@@ -4,7 +4,7 @@
 > в приложение («Личный кабинет сотрудника», киоск, step-up сервисов). Описывает жизненный цикл
 > карты, хранение секрета и состояния, политики по сценариям, внешние ответы, наблюдаемость,
 > REST-эскиз, анти-паттерны и FAQ.
-> **Статус.** Сверено с исходным кодом `cotp-java/src/main/java/com/cotp/` (версия `1.0.0`) и
+> **Статус.** Сверено с исходным кодом `cotp-java/src/main/java/ru/loolzaaa/` (версия `1.0.0`) и
 > `COTP_SPECIFICATION.md` v1.0. Все сигнатуры и примеры ниже — рабочие.
 > **Язык:** русский; идентификаторы, классы, RFC и имена метрик — в латинице.
 > **Дата:** 2026-10-06.
@@ -38,22 +38,22 @@
 |---|---|
 | JDK baseline | **17+** (собрано/проверено на Temurin 21) |
 | Runtime-зависимости ядра | **нет** (только JDK: `javax.crypto.Mac`, `java.security`) |
-| Координаты | `com.cotp:cotp-java:1.0.0` (MIT) |
-| JPMS | модуль `com.cotp`, экспортирует `com.cotp` |
-| Опционально | `com.cotp:cotp-metrics:1.0.0` (Micrometer; зависит от ядра) |
+| Координаты | `ru.loolzaaa:cotp-java:1.0.0` (MIT) |
+| JPMS | модуль `ru.loolzaaa`, экспортирует `ru.loolzaaa` |
+| Опционально | `ru.loolzaaa:cotp-metrics:1.0.0` (Micrometer; зависит от ядра) |
 
 Maven:
 
 ```xml
 <dependency>
-  <groupId>com.cotp</groupId>
+  <groupId>ru.loolzaaa</groupId>
   <artifactId>cotp-java</artifactId>
   <version>1.0.0</version>
 </dependency>
 
 <!-- опционально: метрики Prometheus/Micrometer -->
 <dependency>
-  <groupId>com.cotp</groupId>
+  <groupId>ru.loolzaaa</groupId>
   <artifactId>cotp-metrics</artifactId>
   <version>1.0.0</version>
 </dependency>
@@ -62,8 +62,8 @@ Maven:
 Gradle:
 
 ```groovy
-implementation("com.cotp:cotp-java:1.0.0")
-// опционально: implementation("com.cotp:cotp-metrics:1.0.0")
+implementation("ru.loolzaaa:cotp-java:1.0.0")
+// опционально: implementation("ru.loolzaaa:cotp-metrics:1.0.0")
 ```
 
 Ядро **не тянет** внешних зависимостей; всё, что требует SDK (Redis, JDBC, KMS/HSM, Micrometer,

@@ -4,14 +4,14 @@
 `BurnStore` и `ThrottleStore`. Любая (в т.ч. внешняя/распределённая) реализация может унаследовать
 эти абстрактные классы и получить единый набор проверок вместо копирования тестов.
 
-- Координаты: `com.cotp:cotp-store-contract:1.0.0` (зависит от `com.cotp:cotp-java:1.0.0` и
+- Координаты: `ru.loolzaaa:cotp-store-contract:1.0.0` (зависит от `ru.loolzaaa:cotp-java:1.0.0` и
   `org.junit.jupiter:junit-jupiter-api`; сам тестов не запускает — классы абстрактные).
 - Назначение: **test-support**; в прод-артефакты не попадает.
 
 ## Классы
 
-- `com.cotp.store.contract.AbstractBurnStoreContract` — контракт `BurnStore`.
-- `com.cotp.store.contract.AbstractThrottleStoreContract` — контракт `ThrottleStore`.
+- `ru.loolzaaa.store.contract.AbstractBurnStoreContract` — контракт `BurnStore`.
+- `ru.loolzaaa.store.contract.AbstractThrottleStoreContract` — контракт `ThrottleStore`.
 
 ### Что проверяется (`BurnStore`)
 

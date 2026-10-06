@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apache Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/wrapper/maven-wrapper.properties`).
 - GitHub Actions CI (`.github/workflows/ci.yml`) building and verifying on JDK 17 and 21 with Maven caching.
 - JaCoCo coverage and Maven Enforcer (Java >= 17) plugins in `cotp-java/pom.xml`.
-- Real JPMS module descriptor `cotp-java/src/main/java/module-info.java` (`module com.cotp { exports com.cotp; }`).
+- Real JPMS module descriptor `cotp-java/src/main/java/module-info.java` (`module ru.loolzaaa { exports ru.loolzaaa; }`).
 - Observability: `CotpEventSink` / `CotpEvent` / `CotpEventType` audit events in the core; `cotp-metrics`
   Micrometer module.
 - Storage/integration: `CotpCredential` + `CotpCredentialCodec` (CRC) + `SchemeRegistry`; `CotpPolicyResolver`
@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `cotp-pdf` (PDFBox + ZXing) card template with a `render-sample.ps1` sample generator.
 - `cotp-demo` (JDK HTTP server) and `docs/` (threat model, ops runbook, sequence diagrams);
   `INTEGRATION_GUIDE.md` and `examples/IntegrationExample.java`.
+
+### Changed
+
+- Renamed the Maven `groupId` and Java packages from `com.cotp` to `ru.loolzaaa`
+  (e.g. `ru.loolzaaa`, `ru.loolzaaa.metrics`, `ru.loolzaaa.pdf`, `ru.loolzaaa.jdbc`,
+  `ru.loolzaaa.redis`, `ru.loolzaaa.store.contract`, `ru.loolzaaa.demo`); the JPMS module is now
+  `ru.loolzaaa`. Artifacts keep their names (`cotp-java`, `cotp-metrics`, ...).
 
 ### Fixed
 
@@ -69,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-dependency Java implementation of Cell-based One-Time Password (COTP): deterministic
   5x5 challenge-card authentication built on HKDF (RFC 5869) and HMAC-SHA-256.
 - Reference COTP v1 derivation vectors and a standalone, Maven-free verification harness.
-- JUnit 5 test suite (`cotp-java/src/test/java/com/cotp/CotpTest.java`).
+- JUnit 5 test suite (`cotp-java/src/test/java/ru/loolzaaa/CotpTest.java`).
 
 [Unreleased]: https://example.invalid/cotp-java/compare/v1.0.0...HEAD
 [1.0.0]: https://example.invalid/cotp-java/releases/tag/v1.0.0

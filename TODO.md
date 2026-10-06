@@ -188,7 +188,7 @@ Grafana-дашборд JSON; конфиг `cotp.metrics.enabled/context-tag/hist
 ### [Q-A] Гигиена репозитория и CI — ✅ **сделано (частично)**
 - [x] Maven Wrapper (`mvnw`/`mvnw.cmd`), `.gitignore`, `LICENSE` (MIT), `CHANGELOG.md`, root `README.md`.
 - [x] GitHub Actions `.github/workflows/ci.yml` (JDK 17/21, `mvn -B -f cotp-java/pom.xml verify`).
-- [x] JPMS `module-info.java` (`module com.cotp { exports com.cotp; }`).
+- [x] JPMS `module-info.java` (`module ru.loolzaaa { exports ru.loolzaaa; }`).
 - [x] JaCoCo coverage + Maven Enforcer (`requireJavaVersion [17,)`); локально `mvnw verify` — **BUILD SUCCESS**, 43 теста.
 - [ ] **Статический анализ** (ErrorProne/SpotBugs) в сборке/CI — **не добавлен**.
 - [x] CI на GitHub прогнан: **JDK 21 — зелёный**; **JDK 17** выявил падение (`ProviderException`

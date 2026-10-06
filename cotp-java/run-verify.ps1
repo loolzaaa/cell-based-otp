@@ -11,8 +11,8 @@ param()
 $ErrorActionPreference = 'Stop'
 $base = Split-Path -Parent $MyInvocation.MyCommand.Path
 $classes = Join-Path $base 'build\classes'
-$resourceOut = Join-Path $classes 'com\cotp'
-$resourceSrc = Join-Path $base 'src\main\resources\com\cotp\cotp-english.txt'
+$resourceOut = Join-Path $classes 'ru\loolzaaa'
+$resourceSrc = Join-Path $base 'src\main\resources\ru\loolzaaa\cotp-english.txt'
 
 Write-Host "== COTP verify ==" -ForegroundColor Cyan
 
@@ -33,7 +33,7 @@ New-Item -ItemType Directory -Force -Path $resourceOut | Out-Null
 Copy-Item -LiteralPath $resourceSrc -Destination (Join-Path $resourceOut 'cotp-english.txt') -Force
 
 Write-Host "Running self-test..." -ForegroundColor Yellow
-& java -cp $classes com.cotp.CotpSelfTest
+& java -cp $classes ru.loolzaaa.CotpSelfTest
 if ($LASTEXITCODE -ne 0) { throw "self-test failed with exit code $LASTEXITCODE" }
 
 Write-Host "OK" -ForegroundColor Green

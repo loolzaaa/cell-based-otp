@@ -3,8 +3,8 @@
 Опциональный модуль: реализации `BurnStore` и `ThrottleStore` поверх Redis (клиент **Lettuce**) для
 **многонодовых** развёртываний. Ядро `cotp-java` остаётся без зависимостей.
 
-- `com.cotp.redis.RedisBurnStore implements BurnStore, AutoCloseable`
-- `com.cotp.redis.RedisThrottleStore implements ThrottleStore, AutoCloseable`
+- `ru.loolzaaa.redis.RedisBurnStore implements BurnStore, AutoCloseable`
+- `ru.loolzaaa.redis.RedisThrottleStore implements ThrottleStore, AutoCloseable`
 
 ## Ключи (префикс по умолчанию `cotp:`)
 

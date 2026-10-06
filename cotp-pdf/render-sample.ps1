@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     Installs the cotp-java core into the local Maven repository (if needed), compiles the
-    cotp-pdf module, resolves its runtime classpath and runs com.cotp.pdf.SampleCardPdf.
+    cotp-pdf module, resolves its runtime classpath and runs ru.loolzaaa.pdf.SampleCardPdf.
     The result is a deterministic, single-page PDF you can open in any PDF reader.
 
 .PARAMETER Layout
@@ -67,7 +67,7 @@ function Invoke-Maven {
     }
 }
 
-$coreJar = Join-Path $env:USERPROFILE '.m2\repository\com\cotp\cotp-java\1.0.0\cotp-java-1.0.0.jar'
+$coreJar = Join-Path $env:USERPROFILE '.m2\repository\ru\loolzaaa\cotp-java\1.0.0\cotp-java-1.0.0.jar'
 if (-not (Test-Path -LiteralPath $coreJar)) {
     Write-Host 'Installing cotp-java core into the local Maven repository...'
     Invoke-Maven @('-B', '-q', '-DskipTests', '-f', $corePom, 'install')
@@ -87,7 +87,7 @@ $deps = (Get-Content -LiteralPath $cpFile -Raw).Trim()
 $classesDir = Join-Path $moduleDir 'target\classes'
 $classpath = "$classesDir;$deps"
 
-$javaArgs = @('-Djava.awt.headless=true', '-cp', $classpath, 'com.cotp.pdf.SampleCardPdf',
+$javaArgs = @('-Djava.awt.headless=true', '-cp', $classpath, 'ru.loolzaaa.pdf.SampleCardPdf',
     $Output, $Layout, $CardId)
 if (-not [string]::IsNullOrWhiteSpace($PinNote)) {
     $javaArgs += $PinNote

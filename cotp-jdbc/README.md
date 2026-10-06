@@ -4,9 +4,9 @@
 **многонодовых** развёртываний (состояние one-time/cooldown/throttle разделяется через общую БД).
 Ядро `cotp-java` остаётся без зависимостей.
 
-- `com.cotp.jdbc.JdbcBurnStore implements BurnStore`
-- `com.cotp.jdbc.JdbcThrottleStore implements ThrottleStore`
-- `com.cotp.jdbc.JdbcStores` — DDL (`SCHEMA`, `createSchema(DataSource)`).
+- `ru.loolzaaa.jdbc.JdbcBurnStore implements BurnStore`
+- `ru.loolzaaa.jdbc.JdbcThrottleStore implements ThrottleStore`
+- `ru.loolzaaa.jdbc.JdbcStores` — DDL (`SCHEMA`, `createSchema(DataSource)`).
 
 ## Схема
 

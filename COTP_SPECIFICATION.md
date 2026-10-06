@@ -631,7 +631,7 @@ verify(card, pinHash, challenge, word, pin, presentedId, registeredId, now):
 
 Используется **BIP-39 English** (2048 слов, 11 бит/слово) — тот же класс словарей, что и для
 сид-фраз криптокошельков. Он встроен в ресурсы библиотеки
-(`src/main/resources/com/cotp/cotp-english.txt`).
+(`src/main/resources/ru/loolzaaa/cotp-english.txt`).
 
 ### 13.3. Замена словаря
 
@@ -695,7 +695,7 @@ Card ID: COTP-DEMO-0001   (version COTP/v1)
 powershell -ExecutionPolicy Bypass -File cotp-java\run-verify.ps1
 
 # только печать векторов:
-java -cp cotp-java\build\classes com.cotp.CotpVectorPrinter
+java -cp cotp-java\build\classes ru.loolzaaa.CotpVectorPrinter
 ```
 
 Ожидаемый результат self-test: `PASS=178 FAIL=0`.
@@ -969,7 +969,7 @@ COTP — **look-up secret**: каждая наблюдаемая пара (яч�
 
 ### 19.1. Характеристики
 
-- **Координаты:** `com.cotp:cotp-java:1.0.0`, лицензия **MIT**.
+- **Координаты:** `ru.loolzaaa:cotp-java:1.0.0`, лицензия **MIT**.
 - **Runtime-зависимости:** **нет** (только JDK: `javax.crypto.Mac`, `java.security`).
 - **JDK baseline:** 17 (собрано/проверено на Temurin 21).
 - **Thread-safety:** все генераторы/верификатор без общего мутабельного состояния; хранилища —

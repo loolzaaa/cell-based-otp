@@ -7,18 +7,18 @@ via `micrometer-registry-prometheus`).
 **The core stays dependency-free.** `cotp-metrics` is a *separate* module: the zero-runtime-dependency
 `cotp-java` artifact is not modified and gains no transitive dependencies.
 
-- Coordinates: `com.cotp:cotp-metrics:1.0.0`
-- Runtime deps: `com.cotp:cotp-java:1.0.0`, `io.micrometer:micrometer-core`
+- Coordinates: `ru.loolzaaa:cotp-metrics:1.0.0`
+- Runtime deps: `ru.loolzaaa:cotp-java:1.0.0`, `io.micrometer:micrometer-core`
 - JDK baseline: 17
 - Tests: JUnit 5 + `SimpleMeterRegistry` (from `micrometer-core`)
 
 ## 1. Quick start
 
 ```java
-import com.cotp.Cotp;
-import com.cotp.CotpScheme;
-import com.cotp.CotpPolicy;
-import com.cotp.metrics.CotpMetrics;
+import ru.loolzaaa.Cotp;
+import ru.loolzaaa.CotpScheme;
+import ru.loolzaaa.CotpPolicy;
+import ru.loolzaaa.metrics.CotpMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
 
 MeterRegistry registry = /* your registry, e.g. PrometheusMeterRegistry */;
@@ -52,7 +52,7 @@ prefer):
   <artifactId>micrometer-registry-prometheus</artifactId>
 </dependency>
 <dependency>
-  <groupId>com.cotp</groupId>
+  <groupId>ru.loolzaaa</groupId>
   <artifactId>cotp-metrics</artifactId>
   <version>1.0.0</version>
 </dependency>

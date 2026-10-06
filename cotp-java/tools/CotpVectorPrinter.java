@@ -1,4 +1,4 @@
-package com.cotp;
+package ru.loolzaaa;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
@@ -9,7 +9,7 @@ import java.util.Map;
  * (HKDF RFC 5869 vector, derived grid key, per-cell indices and the final grid).
  *
  * <p>Run after compiling the library:</p>
- * <pre>java -cp build/classes com.cotp.CotpVectorPrinter</pre>
+ * <pre>java -cp build/classes ru.loolzaaa.CotpVectorPrinter</pre>
  */
 public final class CotpVectorPrinter {
 

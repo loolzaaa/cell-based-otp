@@ -21,9 +21,9 @@ live only in this module. No iText (AGPL) and no LGPL libraries are used.
 ## Usage
 
 ```java
-import com.cotp.Cotp;
-import com.cotp.CotpCard;
-import com.cotp.pdf.CotpCardPdf;
+import ru.loolzaaa.Cotp;
+import ru.loolzaaa.CotpCard;
+import ru.loolzaaa.pdf.CotpCardPdf;
 
 Cotp cotp = new Cotp();
 CotpCard card = cotp.generateCard("CARD-42");
@@ -73,7 +73,7 @@ file with any PDF reader (double-click, or `Start-Process .\cotp-pdf\build\sampl
 Run the main class directly after `dependency:build-classpath`:
 
 ```powershell
-java -cp "cotp-pdf\target\classes;<deps>" com.cotp.pdf.SampleCardPdf `
+java -cp "cotp-pdf\target\classes;<deps>" ru.loolzaaa.pdf.SampleCardPdf `
     cotp-pdf\build\sample-card.pdf WORD_PAIRS COTP-DEMO-0001
 ```
 
@@ -83,7 +83,7 @@ The PIN note is printed as the card title only for visual testing — never pass
 ## Public API
 
 ```java
-package com.cotp.pdf;
+package ru.loolzaaa.pdf;
 
 public final class CotpCardPdf {
     public CotpCardPdf();
@@ -100,14 +100,14 @@ public final class CotpPdfOptions {
 }
 ```
 
-Failures during rendering are reported as the unchecked `com.cotp.pdf.CotpPdfException`.
+Failures during rendering are reported as the unchecked `ru.loolzaaa.pdf.CotpPdfException`.
 
 ## Build
 
 The Maven Wrapper lives in `cotp-java/`. From the repository root:
 
 ```powershell
-# 1. install the core so cotp-pdf can resolve com.cotp:cotp-java:1.0.0
+# 1. install the core so cotp-pdf can resolve ru.loolzaaa:cotp-java:1.0.0
 cotp-java\mvnw.cmd -B -f cotp-java\pom.xml install
 
 # 2. build and test this module

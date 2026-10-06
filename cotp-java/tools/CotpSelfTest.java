@@ -1,4 +1,4 @@
-package com.cotp;
+package ru.loolzaaa;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -17,7 +17,7 @@ import java.util.Set;
  * <p>It proves determinism and exercises the full protocol surface without requiring Maven or
  * JUnit. Exits with code 0 on success and 1 on the first failure batch.</p>
  *
- * <pre>java -cp build/classes com.cotp.CotpSelfTest</pre>
+ * <pre>java -cp build/classes ru.loolzaaa.CotpSelfTest</pre>
  */
 public final class CotpSelfTest {
 

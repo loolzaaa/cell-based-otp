@@ -75,7 +75,7 @@ Without Maven at all, use the bundled script (this is how the repo is verified h
 ```
 
 It compiles `src/main/java` + `tools/`, copies resources and runs the dependency-free
-`com.cotp.CotpSelfTest` (178 assertions, including the full reference vector).
+`ru.loolzaaa.CotpSelfTest` (178 assertions, including the full reference vector).
 
 ## Layout
 
@@ -84,10 +84,10 @@ cotp-java/
 ├─ pom.xml
 ├─ mvnw / mvnw.cmd              Maven Wrapper
 ├─ run-verify.ps1              build + self-test without Maven
-├─ src/main/java/module-info.java                 JPMS descriptor (module com.cotp)
-├─ src/main/java/com/cotp/                        library
-├─ src/main/resources/com/cotp/cotp-english.txt   BIP-39 dictionary (2048 words)
-├─ src/test/java/com/cotp/                        JUnit 5 tests
+├─ src/main/java/module-info.java                 JPMS descriptor (module ru.loolzaaa)
+├─ src/main/java/ru/loolzaaa/                        library
+├─ src/main/resources/ru/loolzaaa/cotp-english.txt   BIP-39 dictionary (2048 words)
+├─ src/test/java/ru/loolzaaa/                        JUnit 5 tests
 └─ tools/                       standalone vector printer + self-test
 ```
 

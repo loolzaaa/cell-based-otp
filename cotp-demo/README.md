@@ -7,7 +7,7 @@ single static `index.html`, so you can watch the whole enrolment → challenge �
 
 - Backend: **JDK only** — `com.sun.net.httpserver.HttpServer`. No Spring, Javalin, Maven or Gradle.
 - Frontend: one static `web/index.html` (inline CSS/JS) served by the same server.
-- Crypto: the actual `com.cotp` classes — nothing is reimplemented.
+- Crypto: the actual `ru.loolzaaa` classes — nothing is reimplemented.
 
 ## Requirements
 
@@ -34,7 +34,7 @@ The script:
 
 1. compiles `cotp-java/src/main/java` + `cotp-demo/src` with `javac -encoding UTF-8` into
    `cotp-demo/build/classes` (a distinct build dir — `cotp-java/build` is never touched);
-2. copies the bundled dictionary to `cotp-demo/build/classes/com/cotp/cotp-english.txt`
+2. copies the bundled dictionary to `cotp-demo/build/classes/ru/loolzaaa/cotp-english.txt`
    and the frontend to `cotp-demo/build/classes/web/index.html`;
 3. starts the server and prints the listening URL.
 

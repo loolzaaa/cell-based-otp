@@ -5,6 +5,6 @@
  * The implementation uses only the JDK ({@code java.base} and {@code java.base}
  * cryptographic primitives); there are no runtime dependencies.</p>
  */
-module com.cotp {
-    exports com.cotp;
+module ru.loolzaaa {
+    exports ru.loolzaaa;
 }
